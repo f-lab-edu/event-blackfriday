@@ -11,23 +11,23 @@ import java.math.BigDecimal
 
 @Entity
 @Table(name = "products")
-class Product : BaseTimeEntity() {
-
+class Product(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null
+    val id: Long? = null,
 
     @Column(nullable = false)
-    var name: String = ""
+    var name: String,
 
     @Column(nullable = false)
-    var description: String = ""
+    var description: String,
 
     @Column(nullable = false)
-    var price: BigDecimal = BigDecimal.ZERO
+    var price: BigDecimal,
 
     @Column(nullable = false)
-    var stockQuantity: Int = 0
+    var stockQuantity: Int,
+) : BaseTimeEntity() {
 
     init {
         require(name.isNotBlank()) { "상품명은 필수입니다." }
