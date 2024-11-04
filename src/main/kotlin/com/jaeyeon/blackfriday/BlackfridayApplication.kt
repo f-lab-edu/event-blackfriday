@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class BlackfridayApplication
 
 fun main(args: Array<String>) {
-	runApplication<BlackfridayApplication>(*args)
+    runApplication<BlackfridayApplication>(*args)
 }
