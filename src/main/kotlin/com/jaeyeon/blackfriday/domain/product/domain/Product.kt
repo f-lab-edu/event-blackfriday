@@ -16,10 +16,10 @@ class Product(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     var name: String,
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2000)
     var description: String,
 
     @Column(nullable = false)
@@ -31,7 +31,9 @@ class Product(
 
     init {
         require(name.isNotBlank()) { "상품명은 필수입니다." }
+        require(name.length <= 255) { "상품명은 최대 255자까지 입력 가능합니다." }
         require(description.isNotBlank()) { "상품 설명은 필수입니다." }
+        require(description.length <= 2000) { "상품 설명은 최대 2000자까지 입력 가능합니다." }
         require(price >= BigDecimal.ZERO) { "가격은 0 이상이어야 합니다." }
         require(stockQuantity >= 0) { "재고는 0 이상이어야 합니다." }
     }

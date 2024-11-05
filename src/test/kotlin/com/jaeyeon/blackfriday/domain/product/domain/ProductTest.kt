@@ -41,6 +41,60 @@ class ProductTest : BehaviorSpec({
             }
         }
 
+        `when`("상품명이 255자를 초과하면") {
+            then("예외가 발생한다") {
+                val longName = "a".repeat(256)
+                shouldThrow<IllegalArgumentException> {
+                    Product(
+                        name = longName,
+                        description = "설명",
+                        price = BigDecimal("1000"),
+                        stockQuantity = 100,
+                    )
+                }.message shouldBe "상품명은 최대 255자까지 입력 가능합니다."
+            }
+        }
+
+        `when`("상품명이 255자이면") {
+            then("상품이 정상적으로 생성된다") {
+                val maxLengthName = "a".repeat(255)
+                val product = Product(
+                    name = maxLengthName,
+                    description = "설명",
+                    price = BigDecimal("1000"),
+                    stockQuantity = 100,
+                )
+                product.name shouldBe maxLengthName
+            }
+        }
+
+        `when`("상품 설명이 2000자를 초과하면") {
+            then("예외가 발생한다") {
+                val longDescription = "a".repeat(2001)
+                shouldThrow<IllegalArgumentException> {
+                    Product(
+                        name = "상품",
+                        description = longDescription,
+                        price = BigDecimal("1000"),
+                        stockQuantity = 100,
+                    )
+                }.message shouldBe "상품 설명은 최대 2000자까지 입력 가능합니다."
+            }
+        }
+
+        `when`("상품 설명이 2000자이면") {
+            then("상품이 정상적으로 생성된다") {
+                val maxLengthDescription = "a".repeat(2000)
+                val product = Product(
+                    name = "상품",
+                    description = maxLengthDescription,
+                    price = BigDecimal("1000"),
+                    stockQuantity = 100,
+                )
+                product.description shouldBe maxLengthDescription
+            }
+        }
+
         `when`("가격이 0보다 작으면") {
             then("예외가 발생한다") {
                 shouldThrow<IllegalArgumentException> {
