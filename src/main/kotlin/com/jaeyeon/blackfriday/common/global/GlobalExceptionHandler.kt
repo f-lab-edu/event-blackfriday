@@ -16,31 +16,31 @@ class GlobalExceptionHandler {
     @ExceptionHandler(BlackFridayException::class)
     fun handleBlackFridayException(ex: BlackFridayException): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ex.errorCode)
-        return ResponseEntity(response, ex.errorCode.status)
+        return ResponseEntity.status(ex.errorCode.status).body(response)
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, ex.bindingResult)
-        return ResponseEntity(response, ErrorCode.INVALID_INPUT_VALUE.status)
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.status).body(response)
     }
 
     @ExceptionHandler(Exception::class)
     fun handleException(ex: Exception): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR)
-        return ResponseEntity(response, ErrorCode.INTERNAL_SERVER_ERROR.status)
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.status).body(response)
     }
 
     @ExceptionHandler(NoHandlerFoundException::class)
     fun handleNoHandlerFoundException(ex: NoHandlerFoundException): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ErrorCode.NOT_FOUND)
-        return ResponseEntity(response, ErrorCode.NOT_FOUND.status)
+        return ResponseEntity.status(ErrorCode.NOT_FOUND.status).body(response)
     }
 
     @ExceptionHandler(ConstraintViolationException::class)
     fun handleConstraintViolationException(ex: ConstraintViolationException): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE)
-        return ResponseEntity(response, ErrorCode.INVALID_INPUT_VALUE.status)
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.status).body(response)
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
@@ -48,6 +48,6 @@ class GlobalExceptionHandler {
         ex: HttpRequestMethodNotSupportedException,
     ): ResponseEntity<ErrorResponse> {
         val response = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED)
-        return ResponseEntity(response, ErrorCode.METHOD_NOT_ALLOWED.status)
+        return ResponseEntity.status(ErrorCode.METHOD_NOT_ALLOWED.status).body(response)
     }
 }
