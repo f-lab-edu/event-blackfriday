@@ -1,7 +1,11 @@
-package com.jaeyeon.blackfriday.domain.product.exception
+package com.jaeyeon.blackfriday.common.global
 
 import com.jaeyeon.blackfriday.common.exception.ErrorCode
-import com.jaeyeon.blackfriday.common.global.BlackFridayException
+
+open class BlackFridayException(
+    val errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : RuntimeException(message)
 
 class ProductException(
     errorCode: ErrorCode,
