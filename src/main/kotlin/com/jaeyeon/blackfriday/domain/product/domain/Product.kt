@@ -1,7 +1,7 @@
 package com.jaeyeon.blackfriday.domain.product.domain
 
+import com.jaeyeon.blackfriday.common.global.ProductException
 import com.jaeyeon.blackfriday.common.model.BaseTimeEntity
-import com.jaeyeon.blackfriday.domain.product.exception.ProductException
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

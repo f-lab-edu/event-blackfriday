@@ -1,5 +1,5 @@
 package com.jaeyeon.blackfriday.domain.product.domain
-import com.jaeyeon.blackfriday.domain.product.exception.ProductException
+import com.jaeyeon.blackfriday.common.global.ProductException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
