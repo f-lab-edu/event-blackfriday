@@ -1,6 +1,7 @@
 package com.jaeyeon.blackfriday.domain.category.domain
 
 import com.jaeyeon.blackfriday.common.global.CategoryException
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -65,7 +66,7 @@ class CategoryTest : BehaviorSpec({
         }
 
         `when`("카테고리를 삭제할 때") {
-            then("부모-자식 관계가 정상적으로 제거된다") {
+            then("부모-자식 관계가 정상적으로 제거되고 논리적으로 삭제된다") {
                 val parent = Category(name = "전자제품")
                 val child = Category(name = "모바일")
 
@@ -73,6 +74,7 @@ class CategoryTest : BehaviorSpec({
                 parent.removeChild(child)
 
                 child.parent shouldBe null
+                child.isDeleted shouldBe true
                 parent.children.size shouldBe 0
             }
         }
@@ -84,17 +86,17 @@ class CategoryTest : BehaviorSpec({
                 category.discountRate shouldBe BigDecimal("10")
             }
 
-            then("90%를 초과하는 할인율은 실패한다") {
+            then("${CategoryConstants.MAXIMUM_DISCOUNT_RATE}%를 초과하는 할인율은 실패한다") {
                 val category = Category(name = "전자제품")
                 shouldThrow<CategoryException> {
-                    category.updateDiscountRate(BigDecimal("91"))
+                    category.updateDiscountRate(CategoryConstants.MAXIMUM_DISCOUNT_RATE + BigDecimal("1"))
                 }
             }
 
-            then("음수 할인율은 실패한다") {
+            then("${CategoryConstants.MINIMUM_DISCOUNT_RATE}% 미만의 할인율은 실패한다") {
                 val category = Category(name = "전자제품")
                 shouldThrow<CategoryException> {
-                    category.updateDiscountRate(BigDecimal("-1"))
+                    category.updateDiscountRate(CategoryConstants.MINIMUM_DISCOUNT_RATE - BigDecimal("1"))
                 }
             }
         }
