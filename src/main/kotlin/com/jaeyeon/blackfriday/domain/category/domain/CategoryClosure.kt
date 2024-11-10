@@ -13,19 +13,18 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "category_closure")
 class CategoryClosure(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ancestor_id", nullable = false)
-    val parent: Category,
+    var ancestor: Category,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "descendant_id", nullable = false)
-    val child: Category,
+    var descendant: Category,
 
     @Column(nullable = false)
-    val depth: Int,
+    var depth: Int,
 )

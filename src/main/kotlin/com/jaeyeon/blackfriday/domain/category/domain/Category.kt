@@ -10,6 +10,7 @@ import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
 import com.jaeyeon.blackfriday.domain.product.domain.Product
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -17,13 +18,16 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 import org.hibernate.annotations.SQLRestriction
 import java.math.BigDecimal
 
+@Entity
+@Table(name = "categories")
 class Category(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(nullable = false, length = 50)
     var name: String,
@@ -37,13 +41,16 @@ class Category(
 
     @OneToMany(mappedBy = "parent", cascade = [CascadeType.ALL], orphanRemoval = true)
     @SQLRestriction("is_deleted = false")
-    val children: MutableList<Category> = mutableListOf(),
+    var children: MutableList<Category> = mutableListOf(),
 
-    @OneToMany(mappedBy = "parent", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val closures: MutableSet<CategoryClosure> = mutableSetOf(),
+    @OneToMany(mappedBy = "ancestor", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var ancestorClosures: MutableList<CategoryClosure> = mutableListOf(),
+
+    @OneToMany(mappedBy = "descendant", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var descendantClosures: MutableList<CategoryClosure> = mutableListOf(),
 
     @OneToMany(mappedBy = "category")
-    val products: MutableList<Product> = mutableListOf(),
+    var products: MutableList<Product> = mutableListOf(),
 
     @Column(nullable = false)
     var depth: Int = 1,
@@ -53,7 +60,6 @@ class Category(
 
     @Column(nullable = false)
     var isDeleted: Boolean = false,
-
 ) : BaseTimeEntity() {
 
     init {
@@ -91,15 +97,36 @@ class Category(
         child.parent = this
         child.depth = this.depth + 1
 
-        closures.add(CategoryClosure(parent = this, child = child, depth = 1))
-        closures.forEach { closure ->
-            child.closures.add(CategoryClosure(parent = closure.parent, child = child, depth = closure.depth + 1))
+        val selfClosure = CategoryClosure(
+            ancestor = this,
+            descendant = child,
+            depth = 1,
+        )
+
+        ancestorClosures.add(selfClosure)
+        child.descendantClosures.add(selfClosure)
+
+        this.descendantClosures.forEach { parentClosure ->
+            val newClosure = CategoryClosure(
+                ancestor = parentClosure.ancestor,
+                descendant = child,
+                depth = parentClosure.depth + 1,
+            )
+            parentClosure.ancestor.ancestorClosures.add(newClosure)
+            child.descendantClosures.add(newClosure)
         }
     }
 
     fun removeChild(child: Category) {
         child.isDeleted = true
-        child.parent = null
         children.remove(child)
+        child.parent = null
+
+        ancestorClosures.removeIf { it.descendant == child }
+        child.descendantClosures.clear()
+
+        child.children.forEach { grandChild ->
+            removeChild(grandChild)
+        }
     }
 }
