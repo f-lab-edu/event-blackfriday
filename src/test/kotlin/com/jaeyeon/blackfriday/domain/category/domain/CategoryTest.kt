@@ -4,6 +4,7 @@ import com.jaeyeon.blackfriday.common.global.CategoryException
 import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import java.math.BigDecimal
 
@@ -42,9 +43,9 @@ class CategoryTest : BehaviorSpec({
 
                 parent.addChild(child)
 
-                child.parent shouldBe parent
-                parent.children.size shouldBe 1
-                parent.children[0] shouldBe child
+                parent.getChildren().size shouldBe 1
+                parent.getChildren()[0] shouldBe child
+                child.getParent() shouldBe parent
                 child.depth shouldBe 2
             }
 
@@ -63,19 +64,35 @@ class CategoryTest : BehaviorSpec({
                     level4.addChild(level5)
                 }
             }
+
+            then("조상-자손 관계가 정상적으로 설정된다") {
+                val level1 = Category(name = "전자제품")
+                val level2 = Category(name = "모바일")
+                val level3 = Category(name = "스마트폰")
+
+                level1.addChild(level2)
+                level2.addChild(level3)
+
+                level1.getChildren() shouldContain level2
+                level2.getChildren() shouldContain level3
+                level1.getAllDescendants() shouldContain level3
+            }
         }
 
         `when`("카테고리를 삭제할 때") {
-            then("부모-자식 관계가 정상적으로 제거되고 논리적으로 삭제된다") {
+            then("모든 관계가 정상적으로 제거되고 논리적으로 삭제된다") {
                 val parent = Category(name = "전자제품")
                 val child = Category(name = "모바일")
+                val grandChild = Category(name = "스마트폰")
 
                 parent.addChild(child)
+                child.addChild(grandChild)
                 parent.removeChild(child)
 
-                child.parent shouldBe null
                 child.isDeleted shouldBe true
-                parent.children.size shouldBe 0
+                grandChild.isDeleted shouldBe true
+                parent.getChildren() shouldBe emptyList()
+                parent.getAllDescendants() shouldBe emptyList()
             }
         }
 

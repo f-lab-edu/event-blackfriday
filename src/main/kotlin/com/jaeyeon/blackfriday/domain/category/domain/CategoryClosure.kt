@@ -19,12 +19,21 @@ class CategoryClosure(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ancestor_id", nullable = false)
-    var ancestor: Category,
+    private var _ancestor: Category,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "descendant_id", nullable = false)
-    var descendant: Category,
+    private var _descendant: Category,
 
     @Column(nullable = false)
-    var depth: Int,
-)
+    private var _depth: Int,
+) {
+    val ancestor: Category
+        get() = _ancestor
+
+    val descendant: Category
+        get() = _descendant
+
+    val depth: Int
+        get() = _depth
+}
