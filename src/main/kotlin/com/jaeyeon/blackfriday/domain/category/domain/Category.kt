@@ -2,14 +2,10 @@ package com.jaeyeon.blackfriday.domain.category.domain
 
 import com.jaeyeon.blackfriday.common.global.CategoryException
 import com.jaeyeon.blackfriday.common.model.BaseTimeEntity
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MAXIMUM_DISCOUNT_RATE
 import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MAX_DEPTH
 import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MAX_NAME_LENGTH
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MINIMUM_DISCOUNT_RATE
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MIN_DISPLAY_ORDER
 import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MIN_NAME_LENGTH
-import com.jaeyeon.blackfriday.domain.category.factory.CategoryClosureFactory.Companion.createAncestralClosure
-import com.jaeyeon.blackfriday.domain.category.factory.CategoryClosureFactory.Companion.createParentChildClosure
-import com.jaeyeon.blackfriday.domain.category.factory.CategoryClosureFactory.Companion.createSelfClosure
 import com.jaeyeon.blackfriday.domain.product.domain.Product
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -19,10 +15,11 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import java.math.BigDecimal
+import org.hibernate.annotations.SQLRestriction
 
 @Entity
 @Table(name = "categories")
+@SQLRestriction("is_deleted = false")
 class Category(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,37 +31,28 @@ class Category(
     @Column(length = 255)
     var description: String? = null,
 
+    @Column(nullable = false)
+    var displayOrder: Int = 0,
+
     @OneToMany(mappedBy = "ancestor", cascade = [CascadeType.ALL], orphanRemoval = true)
-    private var ancestorClosures: MutableList<CategoryClosure> = mutableListOf(),
+    val ancestorClosures: MutableList<CategoryClosure> = mutableListOf(),
 
     @OneToMany(mappedBy = "descendant", cascade = [CascadeType.ALL], orphanRemoval = true)
-    private var descendantClosures: MutableList<CategoryClosure> = mutableListOf(),
+    val descendantClosures: MutableList<CategoryClosure> = mutableListOf(),
 
     @OneToMany(mappedBy = "category")
-    private var products: MutableList<Product> = mutableListOf(),
+    val products: MutableList<Product> = mutableListOf(),
 
     @Column(nullable = false)
-    private var _depth: Int = 1,
+    var depth: Int = 1,
 
     @Column(nullable = false)
-    private var _discountRate: BigDecimal = BigDecimal.ZERO,
-
-    @Column(nullable = false)
-    private var _isDeleted: Boolean = false,
+    var isDeleted: Boolean = false,
 ) : BaseTimeEntity() {
-
-    val depth: Int
-        get() = _depth
-
-    val isDeleted: Boolean
-        get() = _isDeleted
-
-    val discountRate: BigDecimal
-        get() = _discountRate
 
     init {
         validateName()
-        validateDiscountRate()
+        validateDisplayOrder()
         initSelfClosure()
     }
 
@@ -74,157 +62,109 @@ class Category(
         }
     }
 
-    private fun validateDiscountRate() {
-        require(_discountRate in MINIMUM_DISCOUNT_RATE..MAXIMUM_DISCOUNT_RATE) {
-            throw CategoryException.invalidDiscountRate()
+    private fun validateDisplayOrder() {
+        require(displayOrder >= MIN_DISPLAY_ORDER) {
+            throw CategoryException.invalidDisplayOrder()
         }
     }
 
     private fun validateDepth() {
-        require(_depth < MAX_DEPTH) {
+        require(depth < MAX_DEPTH) {
             throw CategoryException.invalidDepth()
         }
     }
 
-    private fun addClosure(closure: CategoryClosure) {
-        when (closure.ancestor) {
-            this -> descendantClosures.add(closure)
-        }
-
-        when (closure.descendant) {
-            this -> ancestorClosures.add(closure)
-        }
+    fun updateDisplayOrder(newOrder: Int, siblings: List<Category>) {
+        validateDisplayOrder(newOrder, siblings)
+        reorderSiblings(this.displayOrder, newOrder, siblings)
+        this.displayOrder = newOrder
     }
 
-    fun updateDiscountRate(newRate: BigDecimal) {
-        validateNewDiscountRate(newRate)
-        this._discountRate = newRate
+    private fun validateDisplayOrder(newOrder: Int, siblings: List<Category>) {
+        require(newOrder >= 0) { throw CategoryException.invalidDisplayOrder() }
+        require(newOrder <= siblings.size) { throw CategoryException.invalidDisplayOrder() }
     }
 
-    private fun validateNewDiscountRate(newRate: BigDecimal) {
-        require(newRate in MINIMUM_DISCOUNT_RATE..MAXIMUM_DISCOUNT_RATE) {
-            throw CategoryException.invalidDiscountRate()
+    private fun reorderSiblings(oldOrder: Int, newOrder: Int, siblings: List<Category>) {
+        siblings.forEach { sibling ->
+            when {
+                newOrder < oldOrder && sibling.displayOrder in newOrder until oldOrder ->
+                    sibling.displayOrder += 1
+                newOrder > oldOrder && sibling.displayOrder in (oldOrder + 1)..newOrder ->
+                    sibling.displayOrder -= 1
+            }
         }
     }
 
     private fun initSelfClosure() {
         if (ancestorClosures.isEmpty()) {
-            addClosure(createSelfClosure(this))
+            val selfClosure = CategoryClosure.createSelf(this)
+            ancestorClosures.add(selfClosure)
+            descendantClosures.add(selfClosure)
         }
     }
 
-    fun getParent(): Category? {
-        return ancestorClosures
-            .filter { it.depth == 1 }
-            .map { it.ancestor }
-            .firstOrNull()
-    }
+    fun getParent(): Category? = ancestorClosures
+        .firstOrNull { it.isDirectRelation() }
+        ?.ancestor
 
-    fun getChildren(): List<Category> {
-        return descendantClosures
-            .filter { it.depth == 1 && !it.descendant.isDeleted }
-            .map { it.descendant }
-            .distinct()
-    }
+    fun getChildren(): List<Category> = descendantClosures
+        .filter { it.isDirectRelation() && !it.descendant.isDeleted }
+        .map { it.descendant }
+        .distinct()
 
-    fun getAllDescendants(): List<Category> {
-        return descendantClosures
-            .filter { it.depth > 0 && !it.descendant.isDeleted }
-            .map { it.descendant }
-            .distinct()
-    }
+    fun getAllDescendants(): List<Category> = descendantClosures
+        .filter { !it.isSelfRelation() && !it.descendant.isDeleted }
+        .map { it.descendant }
+        .distinct()
 
     fun addChild(child: Category) {
         validateDepth()
         child.initSelfClosure()
         addDirectRelation(child)
         propagateAncestralRelations(child)
-        child.updateDepth(this._depth + 1)
+        child.depth = this.depth + 1
     }
 
     private fun addDirectRelation(child: Category) {
-        val parentChildClosure = createParentChildClosure(this, child)
-        addClosure(parentChildClosure)
-        child.addClosure(parentChildClosure)
+        val directClosure = CategoryClosure.createDirect(this, child)
+        descendantClosures.add(directClosure)
+        child.ancestorClosures.add(directClosure)
     }
 
     private fun propagateAncestralRelations(child: Category) {
         ancestorClosures
-            .filter { it.depth > 0 }
-            .forEach { ancestorClosures ->
-                createAndAddAncestralClosure(ancestorClosures, child)
+            .filter { !it.isSelfRelation() }
+            .forEach { ancestorClosure ->
+                val indirectClosure = CategoryClosure.createIndirect(
+                    ancestorClosure.ancestor,
+                    child,
+                    ancestorClosure.depth + 1,
+                )
+                ancestorClosure.ancestor.descendantClosures.add(indirectClosure)
+                child.ancestorClosures.add(indirectClosure)
             }
-    }
-
-    private fun createAndAddAncestralClosure(
-        ancestorClosures: CategoryClosure,
-        child: Category,
-    ) {
-        val newClosure = createAncestralClosure(
-            ancestorClosures.ancestor,
-            child,
-            ancestorClosures.depth + 1,
-        )
-        ancestorClosures.ancestor.addClosure(newClosure)
-        child.addClosure(newClosure)
-    }
-
-    private fun updateDepth(newDepth: Int) {
-        _depth = newDepth
     }
 
     fun removeChild(child: Category) {
-        val categoriesToDelete = collectDescendantsToDelete(child)
-        markCategoriesAsDeleted(categoriesToDelete)
-        removeClosureRelations(categoriesToDelete)
+        markAsDeleted(child)
+        removeClosureRelations(child)
     }
 
-    private fun collectDescendantsToDelete(startCategory: Category): List<Category> {
-        val categoriesToDelete = mutableListOf<Category>()
-        collectDescendantsRecursively(startCategory, categoriesToDelete)
-        return categoriesToDelete
+    private fun markAsDeleted(category: Category) {
+        category.isDeleted = true
+        category.getChildren().forEach { markAsDeleted(it) }
     }
 
-    private fun collectDescendantsRecursively(
-        category: Category,
-        collected: MutableList<Category>,
-    ) {
-        if (collected.contains(category)) return
-        if (category.isDeleted) return
+    private fun removeClosureRelations(category: Category) {
+        category.ancestorClosures.clear()
+        category.descendantClosures.clear()
 
-        collected.add(category)
-        category.getAllDescendants()
-            .forEach { descendant ->
-                collectDescendantsRecursively(descendant, collected)
-            }
-    }
-
-    private fun markCategoriesAsDeleted(categories: List<Category>) {
-        categories.forEach { it.markAsDeleted() }
-    }
-
-    private fun markAsDeleted() {
-        _isDeleted = true
-    }
-
-    private fun removeClosureRelations(categories: List<Category>) {
-        categories.forEach { category ->
-            category.clearClosures()
-            removeCategoryFromClosures(category)
-        }
-    }
-
-    private fun removeCategoryFromClosures(category: Category) {
         descendantClosures.removeAll { closure ->
             closure.ancestor == category || closure.descendant == category
         }
         ancestorClosures.removeAll { closure ->
             closure.ancestor == category || closure.descendant == category
         }
-    }
-
-    private fun clearClosures() {
-        ancestorClosures.clear()
-        descendantClosures.clear()
     }
 }

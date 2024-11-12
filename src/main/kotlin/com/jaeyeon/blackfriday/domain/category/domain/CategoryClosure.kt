@@ -1,5 +1,9 @@
 package com.jaeyeon.blackfriday.domain.category.domain
 
+import com.jaeyeon.blackfriday.common.global.CategoryException
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.DIRECT_RELATION_DEPTH
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.SELF_RELATION_DEPTH
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -19,21 +23,41 @@ class CategoryClosure(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ancestor_id", nullable = false)
-    private var _ancestor: Category,
+    val ancestor: Category,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "descendant_id", nullable = false)
-    private var _descendant: Category,
+    val descendant: Category,
 
     @Column(nullable = false)
-    private var _depth: Int,
+    val depth: Int,
 ) {
-    val ancestor: Category
-        get() = _ancestor
+    init {
+        require(depth >= CategoryConstants.MIN_DEPTH) {
+            throw CategoryException.invalidClosureDepth()
+        }
+    }
 
-    val descendant: Category
-        get() = _descendant
+    fun isSelfRelation() = depth == SELF_RELATION_DEPTH
+    fun isDirectRelation() = depth == DIRECT_RELATION_DEPTH
 
-    val depth: Int
-        get() = _depth
+    companion object {
+        fun createSelf(category: Category) = CategoryClosure(
+            ancestor = category,
+            descendant = category,
+            depth = SELF_RELATION_DEPTH,
+        )
+
+        fun createDirect(parent: Category, child: Category) = CategoryClosure(
+            ancestor = parent,
+            descendant = child,
+            depth = DIRECT_RELATION_DEPTH,
+        )
+
+        fun createIndirect(ancestor: Category, descendant: Category, depth: Int) = CategoryClosure(
+            ancestor = ancestor,
+            descendant = descendant,
+            depth = depth,
+        )
+    }
 }

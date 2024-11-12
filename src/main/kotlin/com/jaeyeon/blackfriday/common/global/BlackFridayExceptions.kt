@@ -32,6 +32,7 @@ class CategoryException(
     companion object {
         fun invalidName() = CategoryException(ErrorCode.INVALID_CATEGORY_NAME)
         fun invalidDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_DEPTH)
-        fun invalidDiscountRate() = CategoryException(ErrorCode.INVALID_CATEGORY_DISCOUNT_RATE)
+        fun invalidDisplayOrder() = CategoryException(ErrorCode.INVALID_CATEGORY_DISPLAY_ORDER)
+        fun invalidClosureDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_CLOSURE_DEPTH)
     }
 }

@@ -1,12 +1,10 @@
 package com.jaeyeon.blackfriday.domain.category.domain
 
 import com.jaeyeon.blackfriday.common.global.CategoryException
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import java.math.BigDecimal
 
 class CategoryTest : BehaviorSpec({
 
@@ -21,6 +19,8 @@ class CategoryTest : BehaviorSpec({
                 category.name shouldBe "전자제품"
                 category.description shouldBe "전자제품 카테고리입니다"
                 category.depth shouldBe 1
+                category.displayOrder shouldBe 0
+                category.isDeleted shouldBe false
             }
 
             then("이름이 2자 미만이면 실패한다") {
@@ -79,6 +79,41 @@ class CategoryTest : BehaviorSpec({
             }
         }
 
+        `when`("노출 순서를 변경할 때") {
+            then("유효한 순서로 변경되고 형제 카테고리들의 순서도 조정된다") {
+                val parent = Category(name = "전자제품")
+                val child1 = Category(name = "모바일", displayOrder = 0)
+                val child2 = Category(name = "가전", displayOrder = 1)
+                val child3 = Category(name = "컴퓨터", displayOrder = 2)
+
+                parent.addChild(child1)
+                parent.addChild(child2)
+                parent.addChild(child3)
+
+                child1.updateDisplayOrder(2, parent.getChildren())
+
+                child1.displayOrder shouldBe 2
+                child2.displayOrder shouldBe 0
+                child3.displayOrder shouldBe 1
+            }
+
+            then("유효하지 않은 순서값이면 실패한다") {
+                val category = Category(name = "전자제품")
+                val siblings = listOf(
+                    Category(name = "모바일"),
+                    Category(name = "가전"),
+                )
+
+                shouldThrow<CategoryException> {
+                    category.updateDisplayOrder(-1, siblings)
+                }
+
+                shouldThrow<CategoryException> {
+                    category.updateDisplayOrder(3, siblings)
+                }
+            }
+        }
+
         `when`("카테고리를 삭제할 때") {
             then("모든 관계가 정상적으로 제거되고 논리적으로 삭제된다") {
                 val parent = Category(name = "전자제품")
@@ -93,28 +128,6 @@ class CategoryTest : BehaviorSpec({
                 grandChild.isDeleted shouldBe true
                 parent.getChildren() shouldBe emptyList()
                 parent.getAllDescendants() shouldBe emptyList()
-            }
-        }
-
-        `when`("할인율을 설정할 때") {
-            then("유효한 할인율은 정상적으로 설정된다") {
-                val category = Category(name = "전자제품")
-                category.updateDiscountRate(BigDecimal("10"))
-                category.discountRate shouldBe BigDecimal("10")
-            }
-
-            then("${CategoryConstants.MAXIMUM_DISCOUNT_RATE}%를 초과하는 할인율은 실패한다") {
-                val category = Category(name = "전자제품")
-                shouldThrow<CategoryException> {
-                    category.updateDiscountRate(CategoryConstants.MAXIMUM_DISCOUNT_RATE + BigDecimal("1"))
-                }
-            }
-
-            then("${CategoryConstants.MINIMUM_DISCOUNT_RATE}% 미만의 할인율은 실패한다") {
-                val category = Category(name = "전자제품")
-                shouldThrow<CategoryException> {
-                    category.updateDiscountRate(CategoryConstants.MINIMUM_DISCOUNT_RATE - BigDecimal("1"))
-                }
             }
         }
     }
