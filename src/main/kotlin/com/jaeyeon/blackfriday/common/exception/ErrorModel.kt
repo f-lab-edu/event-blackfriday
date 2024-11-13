@@ -21,8 +21,8 @@ enum class ErrorCode(
 
     INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-001", "카테고리 이름은 2-50자 사이여야 합니다."),
     INVALID_CATEGORY_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-002", "카테고리는 최대 4단계까지만 허용됩니다."),
-    INVALID_CATEGORY_DISPLAY_ORDER(HttpStatus.BAD_REQUEST, "CATEGORY-004", "노출 순서는 0 이상이어야 합니다"),
-    INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-005", "Closure depth는 0 이상이어야 합니다"),
+    INVALID_CATEGORY_DISPLAY_ORDER(HttpStatus.BAD_REQUEST, "CATEGORY-003", "노출 순서는 0 이상이어야 합니다"),
+    INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-004", "Closure depth는 0 이상이어야 합니다"),
 }
 
 data class ErrorResponse(
