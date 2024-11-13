@@ -23,3 +23,16 @@ class ProductException(
         fun outOfStock(message: String? = null) = ProductException(ErrorCode.NOT_ENOUGH_STOCK, message)
     }
 }
+
+class CategoryException(
+    errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : BlackFridayException(errorCode, message) {
+
+    companion object {
+        fun invalidName() = CategoryException(ErrorCode.INVALID_CATEGORY_NAME)
+        fun invalidDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_DEPTH)
+        fun invalidDisplayOrder() = CategoryException(ErrorCode.INVALID_CATEGORY_DISPLAY_ORDER)
+        fun invalidClosureDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_CLOSURE_DEPTH)
+    }
+}
