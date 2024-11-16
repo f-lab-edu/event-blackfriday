@@ -21,6 +21,10 @@ class ProductException(
         fun invalidPrice(message: String? = null) = ProductException(ErrorCode.INVALID_PRODUCT_PRICE, message)
         fun invalidStock(message: String? = null) = ProductException(ErrorCode.INVALID_PRODUCT_STOCK_QUANTITY, message)
         fun outOfStock(message: String? = null) = ProductException(ErrorCode.NOT_ENOUGH_STOCK, message)
+        fun invalidProductNotFound(message: String? = null) = ProductException(
+            ErrorCode.INVALID_PRODUCT_NOT_FOUND,
+            message,
+        )
     }
 }
 
@@ -34,5 +38,7 @@ class CategoryException(
         fun invalidDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_DEPTH)
         fun invalidDisplayOrder() = CategoryException(ErrorCode.INVALID_CATEGORY_DISPLAY_ORDER)
         fun invalidClosureDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_CLOSURE_DEPTH)
+        fun invalidNotFound() = CategoryException(ErrorCode.INVALID_CATEGORY_NOT_FOUND)
+        fun invalidDuplicateName() = CategoryException(ErrorCode.INVALID_CATEGORY_DUPLICATE_NAME)
     }
 }

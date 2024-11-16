@@ -18,11 +18,14 @@ enum class ErrorCode(
     INVALID_PRODUCT_PRICE(HttpStatus.BAD_REQUEST, "PRODUCT-003", "유효하지 않는 가격입니다."),
     INVALID_PRODUCT_STOCK_QUANTITY(HttpStatus.BAD_REQUEST, "PRODUCT-004", "유효하지 않는 재고 수량입니다."),
     NOT_ENOUGH_STOCK(HttpStatus.BAD_REQUEST, "PRODUCT-005", "재고가 부족합니다."),
+    INVALID_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-006", "상품을 찾을 수 없습니다."),
 
     INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-001", "카테고리 이름은 2-50자 사이여야 합니다."),
     INVALID_CATEGORY_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-002", "카테고리는 최대 4단계까지만 허용됩니다."),
     INVALID_CATEGORY_DISPLAY_ORDER(HttpStatus.BAD_REQUEST, "CATEGORY-003", "노출 순서는 0 이상이어야 합니다"),
     INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-004", "Closure depth는 0 이상이어야 합니다"),
+    INVALID_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY-005", "카테고리를 찾을 수 없습니다."),
+    INVALID_CATEGORY_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-006", "중복된 카테고리 이름입니다."),
 }
 
 data class ErrorResponse(
