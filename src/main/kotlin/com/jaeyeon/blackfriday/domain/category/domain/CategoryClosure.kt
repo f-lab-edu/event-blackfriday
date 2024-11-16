@@ -1,9 +1,8 @@
 package com.jaeyeon.blackfriday.domain.category.domain
 
 import com.jaeyeon.blackfriday.common.global.CategoryException
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.DIRECT_RELATION_DEPTH
-import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.SELF_RELATION_DEPTH
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MAX_DEPTH
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MIN_CLOSURE_DEPTH
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -17,9 +16,11 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "category_closure")
 class CategoryClosure(
+
     @Id
+    @Column(name = "closure_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ancestor_id", nullable = false)
@@ -33,31 +34,12 @@ class CategoryClosure(
     val depth: Int,
 ) {
     init {
-        require(depth >= CategoryConstants.MIN_DEPTH) {
-            throw CategoryException.invalidClosureDepth()
-        }
+        validateClosureDepth(depth)
     }
 
-    fun isSelfRelation() = depth == SELF_RELATION_DEPTH
-    fun isDirectRelation() = depth == DIRECT_RELATION_DEPTH
-
-    companion object {
-        fun createSelf(category: Category) = CategoryClosure(
-            ancestor = category,
-            descendant = category,
-            depth = SELF_RELATION_DEPTH,
-        )
-
-        fun createDirect(parent: Category, child: Category) = CategoryClosure(
-            ancestor = parent,
-            descendant = child,
-            depth = DIRECT_RELATION_DEPTH,
-        )
-
-        fun createIndirect(ancestor: Category, descendant: Category, depth: Int) = CategoryClosure(
-            ancestor = ancestor,
-            descendant = descendant,
-            depth = depth,
-        )
+    private fun validateClosureDepth(depth: Int) {
+        if (depth < MIN_CLOSURE_DEPTH || ancestor.depth + depth > MAX_DEPTH) {
+            throw CategoryException.invalidClosureDepth()
+        }
     }
 }
