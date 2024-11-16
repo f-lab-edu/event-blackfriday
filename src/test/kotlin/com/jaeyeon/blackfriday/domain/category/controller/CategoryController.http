@@ -1,0 +1,85 @@
+### 카테고리 생성 - 루트 카테고리
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "전자제품",
+  "depth": 1,
+  "displayOrder": 0
+}
+
+### 카테고리 생성 - 하위 카테고리
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "노트북",
+  "depth": 2,
+  "displayOrder": 1,
+  "parentId": 1
+}
+
+### 카테고리 수정
+PUT http://localhost:8080/api/v1/categories/1
+Content-Type: application/json
+
+{
+  "name": "디지털기기",
+  "displayOrder": 2
+}
+
+### 카테고리 삭제
+DELETE http://localhost:8080/api/v1/categories/1
+
+### 전체 카테고리 조회
+GET http://localhost:8080/api/v1/categories/all
+
+### 하위 카테고리 조회
+GET http://localhost:8080/api/v1/categories/1/sub-categories
+
+### 카테고리 트리 조회
+GET http://localhost:8080/api/v1/categories/tree
+
+### 잘못된 요청 테스트 ###
+
+### 카테고리 생성 - 잘못된 depth
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "depth": 5,
+  "displayOrder": 0
+}
+
+### 카테고리 생성 - 중복된 이름
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "전자제품",
+  "depth": 1,
+  "displayOrder": 0
+}
+
+### 카테고리 생성 - 잘못된 displayOrder
+POST http://localhost:8080/api/v1/categories
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "depth": 1,
+  "displayOrder": -1
+}
+
+### 존재하지 않는 카테고리 수정
+PUT http://localhost:8080/api/v1/categories/999
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "displayOrder": 0
+}
+
+### 존재하지 않는 카테고리의 하위 카테고리 조회
+GET http://localhost:8080/api/v1/categories/999/sub-categories
