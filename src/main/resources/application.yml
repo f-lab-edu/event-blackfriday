@@ -1,9 +1,3 @@
-# application.yml
-spring:
-  profiles:
-    active: local
-
----
 # application-local.yml
 spring:
   config:

@@ -2,6 +2,7 @@ package com.jaeyeon.blackfriday.domain.product.dto
 
 import com.jaeyeon.blackfriday.domain.product.domain.Product
 import com.jaeyeon.blackfriday.domain.product.domain.enum.ProductStatus
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -18,11 +19,11 @@ data class CreateProductRequest(
     @field:NotBlank(message = "상품 설명은 필수입니다.")
     val description: String,
 
-    @field:Min(1)
+    @field:DecimalMin(value = "100", message = "상품 가격은 100원 이상이어야 합니다.")
     @field:NotNull(message = "상품 가격은 필수입니다.")
     val price: BigDecimal,
 
-    @field:Min(0)
+    @field:Min(value = 1, message = "재고수량은 1개 이상이어야 합니다.")
     @field:NotNull(message = "재고수량은 필수입니다.")
     val stockQuantity: Int,
 
@@ -38,7 +39,7 @@ data class UpdateProductRequest(
     @field:Length(max = 2000)
     val description: String? = null,
 
-    @field:Min(1)
+    @field:DecimalMin(value = "100", message = "상품 가격은 100원 이상이어야 합니다.")
     val price: BigDecimal? = null,
 
     val categoryId: Long? = null,

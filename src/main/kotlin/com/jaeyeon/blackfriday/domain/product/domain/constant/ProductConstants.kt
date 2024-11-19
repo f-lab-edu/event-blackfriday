@@ -7,6 +7,6 @@ object ProductConstants {
     const val MIN_PRICE = 1
 
     // 재고 관련
-    const val MIN_STOCK_QUANTITY = 0
+    const val MIN_STOCK_QUANTITY = 1
     const val MIN_STOCK_CHANGE = 1
 }
