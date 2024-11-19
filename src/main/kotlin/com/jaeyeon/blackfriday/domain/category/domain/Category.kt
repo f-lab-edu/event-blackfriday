@@ -32,7 +32,7 @@ class Category(
     var depth: Int = 1,
 
     @Column(nullable = false)
-    var displayOrder: Int = 0,
+    var displayOrder: Int = 1,
 
     @Column(nullable = false)
     var isDeleted: Boolean = false,

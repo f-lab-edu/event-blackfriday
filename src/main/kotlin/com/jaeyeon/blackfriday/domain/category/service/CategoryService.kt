@@ -3,6 +3,9 @@ package com.jaeyeon.blackfriday.domain.category.service
 import com.jaeyeon.blackfriday.common.global.CategoryException
 import com.jaeyeon.blackfriday.domain.category.domain.Category
 import com.jaeyeon.blackfriday.domain.category.domain.CategoryClosure
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.DIRECT_CHILD_DEPTH
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.MIN_CLOSURE_DEPTH
+import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.ROOT_CATEGORY_DEPTH
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryTreeResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CreateCategoryRequest
@@ -23,16 +26,26 @@ class CategoryService(
     fun createCategory(request: CreateCategoryRequest): CategoryResponse {
         validateDuplicateName(request.name, request.depth)
 
-        val category = Category(
-            name = request.name,
-            depth = request.depth,
-            displayOrder = request.displayOrder,
+        val category = createCategoryEntity(request)
+
+        createCategoryClosureRelations(category, request.parentId)
+
+        return CategoryResponse.from(category)
+    }
+
+    private fun createCategoryEntity(request: CreateCategoryRequest): Category {
+        return categoryRepository.save(
+            Category(
+                name = request.name,
+                depth = request.depth,
+                displayOrder = request.displayOrder,
+            ),
         )
+    }
 
-        val savedCategory = categoryRepository.save(category)
-        createCategoryClosure(savedCategory, request.parentId)
-
-        return CategoryResponse.from(savedCategory)
+    private fun createCategoryClosureRelations(category: Category, parentId: Long?) {
+        val closures = buildClosureRelations(category, parentId)
+        categoryClosureRepository.saveAll(closures)
     }
 
     fun updateCategory(id: Long, request: UpdateCategoryRequest): CategoryResponse {
@@ -57,21 +70,26 @@ class CategoryService(
     }
 
     @Transactional(readOnly = true)
-    fun getSubCategories(parentId: Long): List<CategoryResponse> {
+    fun getDirectChildCategories(parentId: Long): List<CategoryResponse> {
         findCategoryById(parentId)
-        return categoryClosureRepository.findByAncestorIdAndDepthFetchJoin(parentId, 1)
-            .map { CategoryResponse.from(it.descendant) }
+        return categoryClosureRepository.findByAncestorIdAndDepthFetchJoin(
+            parentId,
+            DIRECT_CHILD_DEPTH,
+        ).map { CategoryResponse.from(it.descendant) }
     }
 
     @Transactional(readOnly = true)
     fun getCategoryTree(): List<CategoryTreeResponse> {
-        val rootCategories = categoryRepository.findByDepthOrderByDisplayOrderAsc(1)
+        val rootCategories = categoryRepository.findByDepthOrderByDisplayOrderAsc(ROOT_CATEGORY_DEPTH)
         return rootCategories.map { buildCategoryTree(it) }
     }
 
     private fun buildCategoryTree(category: Category): CategoryTreeResponse {
         val childCategories = categoryClosureRepository
-            .findByAncestorIdAndDepthFetchJoin(category.id!!, 1)
+            .findByAncestorIdAndDepthFetchJoin(
+                category.id!!,
+                DIRECT_CHILD_DEPTH,
+            )
             .map { it.descendant }
             .sortedBy { it.displayOrder }
 
@@ -91,26 +109,34 @@ class CategoryService(
         }
     }
 
-    private fun createCategoryClosure(category: Category, parentId: Long?) {
-        categoryClosureRepository.save(
+    private fun buildClosureRelations(category: Category, parentId: Long?): List<CategoryClosure> {
+        val selfRelation = createSelfRelation(category)
+        val parentRelations = createParentRelations(category, parentId)
+        return selfRelation + parentRelations
+    }
+
+    private fun createSelfRelation(category: Category): List<CategoryClosure> {
+        return listOf(
             CategoryClosure(
                 ancestor = category,
                 descendant = category,
-                depth = 0,
+                depth = MIN_CLOSURE_DEPTH,
             ),
         )
+    }
 
-        parentId?.let { pid ->
-            val parentClosures = categoryClosureRepository.findByDescendantIdFetchJoin(pid)
-            parentClosures.forEach { parentClosure ->
-                categoryClosureRepository.save(
-                    CategoryClosure(
-                        ancestor = parentClosure.ancestor,
-                        descendant = category,
-                        depth = parentClosure.depth + 1,
-                    ),
-                )
-            }
+    private fun createParentRelations(category: Category, parentId: Long?): List<CategoryClosure> {
+        if (parentId == null) {
+            return emptyList()
+        }
+
+        val parentClosures = categoryClosureRepository.findByDescendantIdFetchJoin(parentId)
+        return parentClosures.map { parentClosure ->
+            CategoryClosure(
+                ancestor = parentClosure.ancestor,
+                descendant = category,
+                depth = parentClosure.depth + DIRECT_CHILD_DEPTH,
+            )
         }
     }
 }

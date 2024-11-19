@@ -27,7 +27,7 @@ class CategoryServiceTest : BehaviorSpec({
         val request = CreateCategoryRequest(
             name = "전자제품",
             depth = 1,
-            displayOrder = 0,
+            displayOrder = 1,
         )
 
         When("루트 카테고리 생성 요청이면") {
@@ -38,15 +38,16 @@ class CategoryServiceTest : BehaviorSpec({
                 depth = request.depth,
                 displayOrder = request.displayOrder,
             )
-            every { categoryClosureRepository.save(any()) } returns mockk()
+
+            every { categoryClosureRepository.saveAll(any<List<CategoryClosure>>()) } returns mockk()
 
             val result = categoryService.createCategory(request)
 
             Then("카테고리가 정상적으로 생성되어야 한다") {
                 result.id shouldBe 1L
                 result.name shouldBe request.name
-                result.depth shouldBe request.depth
-                result.displayOrder shouldBe request.displayOrder
+                result.depth shouldBe 1
+                result.displayOrder shouldBe 1
             }
         }
 
@@ -74,7 +75,7 @@ class CategoryServiceTest : BehaviorSpec({
             id = parentId,
             name = "전자제품",
             depth = 1,
-            displayOrder = 0,
+            displayOrder = 1,
         )
 
         When("부모 카테고리가 존재하면") {
@@ -85,7 +86,6 @@ class CategoryServiceTest : BehaviorSpec({
                 depth = request.depth,
                 displayOrder = request.displayOrder,
             )
-            every { categoryClosureRepository.save(any()) } returns mockk()
             every { categoryClosureRepository.findByDescendantIdFetchJoin(parentId) } returns listOf(
                 CategoryClosure(
                     ancestor = parentCategory,
@@ -93,22 +93,23 @@ class CategoryServiceTest : BehaviorSpec({
                     depth = 0,
                 ),
             )
+            every { categoryClosureRepository.saveAll(any<List<CategoryClosure>>()) } returns mockk()
 
             val result = categoryService.createCategory(request)
 
             Then("하위 카테고리가 정상적으로 생성되어야 한다") {
                 result.id shouldBe 2L
                 result.name shouldBe request.name
-                result.depth shouldBe request.depth
-                result.displayOrder shouldBe request.displayOrder
+                result.depth shouldBe 2
+                result.displayOrder shouldBe 1
             }
         }
     }
 
     Given("카테고리 조회 시") {
         val categories = listOf(
-            Category(id = 1L, name = "전자제품", depth = 1, displayOrder = 0),
-            Category(id = 2L, name = "의류", depth = 1, displayOrder = 1),
+            Category(id = 1L, name = "전자제품", depth = 1, displayOrder = 1),
+            Category(id = 2L, name = "의류", depth = 1, displayOrder = 2),
         )
 
         When("전체 카테고리 조회 요청이면") {
@@ -135,7 +136,7 @@ class CategoryServiceTest : BehaviorSpec({
             id = categoryId,
             name = "전자제품",
             depth = 1,
-            displayOrder = 0,
+            displayOrder = 1,
         )
 
         When("존재하는 카테고리면") {
@@ -145,7 +146,7 @@ class CategoryServiceTest : BehaviorSpec({
 
             Then("카테고리가 정상적으로 수정되어야 한다") {
                 result.name shouldBe request.name
-                result.displayOrder shouldBe request.displayOrder
+                result.displayOrder shouldBe 2
             }
         }
 

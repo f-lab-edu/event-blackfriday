@@ -53,7 +53,10 @@ class CategoryController(
 
     @GetMapping("/{id}/sub-categories")
     fun getSubCategories(@PathVariable id: Long): ResponseEntity<List<CategoryResponse>> {
-        return ResponseEntity.ok(categoryService.getSubCategories(id))
+        return ResponseEntity.ok(
+            categoryService
+                .getDirectChildCategories(id),
+        )
     }
 
     @GetMapping("/tree")
