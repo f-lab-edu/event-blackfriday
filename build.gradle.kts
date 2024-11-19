@@ -31,6 +31,7 @@ dependencies {
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     // Database
     runtimeOnly("com.mysql:mysql-connector-j")
