@@ -7,6 +7,7 @@ plugins {
     id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.6"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
+    id("com.google.cloud.tools.jib") version "3.4.4"
 }
 
 group = "com.jaeyeon"
@@ -22,11 +23,38 @@ repositories {
     mavenCentral()
 }
 
+jib {
+    from {
+        image = "eclipse-temurin:17-jre-focal"
+        platforms {
+            platform {
+                architecture = "arm64"
+                os = "linux"
+            }
+        }
+    }
+    to {
+        val dockerHubUsername = System.getenv("DOCKER_HUB_USERNAME") ?: "cjyeon1022"
+        image = "docker.io/$dockerHubUsername/blackfriday-app"
+        tags = setOf("latest", version.toString())
+    }
+    container {
+        jvmFlags = listOf("-Xms512m", "-Xmx1024m")
+        ports = listOf("8080")
+        environment = mapOf<String, String>(
+            "SPRING_PROFILES_ACTIVE" to (System.getenv("SPRING_PROFILES_ACTIVE") ?: "dev"),
+            "TZ" to "Asia/Seoul",
+        )
+        creationTime.set("USE_CURRENT_TIMESTAMP")
+    }
+}
+
 dependencies {
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
