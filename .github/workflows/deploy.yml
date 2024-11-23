@@ -10,8 +10,7 @@ on:
       - 'docs/**'
       - '.gitignore'
   pull_request:
-    branches:
-      - 'main'
+    branches: [ main ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -19,7 +18,18 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: windows-latest
+            gradle-command: "gradlew.bat clean test"
+          - os: ubuntu-latest
+            gradle-command: "./gradlew clean test"
+          - os: macos-latest
+            gradle-command: "./gradlew clean test"
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +41,15 @@ jobs:
           cache: 'gradle'
 
       - name: Grant execute permission for gradlew
+        if: runner.os != 'Windows'
         run: chmod +x gradlew
 
-      - name: Clean and Test with Gradle
-        run: ./gradlew clean test
+      - name: Clean and Test
+        run: ${{ matrix.gradle-command }}
 
   build-and-push:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.test.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +75,7 @@ jobs:
 
   deploy-blue:
     needs: build-and-push
+    if: needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,9 +117,11 @@ jobs:
             echo "Attempt $i failed. Retrying..."
             sleep 10
           done
+          exit 1
 
   deploy-green:
-    needs: deploy-blue
+    needs: [deploy-blue]
+    if: needs.deploy-blue.result == 'success'  # Blue 배포 성공해야만 실행
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,6 +129,7 @@ jobs:
       - name: Copy docker-compose files
         uses: appleboy/scp-action@master
         with:
+          host: ${{ secrets.NCP_GREEN_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           source: "docker-compose.yml"
@@ -135,3 +150,17 @@ jobs:
             MYSQL_USER=${{ secrets.MYSQL_USER }} \
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
             docker compose up -d
+
+      - name: Health Check Green
+        run: |
+          echo "Waiting for application to initialize..."
+          sleep 60
+          for i in {1..10}; do
+            if curl -s -f http://${{ secrets.NCP_GREEN_HOST }}:8080/health/liveness; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed. Retrying..."
+            sleep 10
+          done
+          exit 1
