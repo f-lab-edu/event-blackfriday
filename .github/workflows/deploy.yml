@@ -45,6 +45,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Clean and Test
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
         run: ${{ matrix.gradle-command }}
 
   build-and-push:
