@@ -18,18 +18,10 @@ on:
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          - os: windows-latest
-            gradle-command: ".\gradlew.bat clean test"
-          - os: ubuntu-latest
-            gradle-command: "./gradlew clean test"
-          - os: macos-latest
-            gradle-command: "./gradlew clean test"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,10 +36,17 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x gradlew
 
-      - name: Clean and Test
+      - name: Test with Gradle
+        if: runner.os != 'Windows'
+        run: ./gradlew clean test
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-        run: ${{ matrix.gradle-command }}
+
+      - name: Test with Gradle on Windows
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat clean test
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
   build-and-push:
     needs: test
