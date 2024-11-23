@@ -2,10 +2,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
 
 ---
 spring:
@@ -27,7 +29,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: dev
+      on-profile: prod
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}
@@ -35,7 +37,7 @@ spring:
     password: ${MYSQL_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:

@@ -36,13 +36,13 @@ jib {
     to {
         val dockerHubUsername = System.getenv("DOCKER_HUB_USERNAME") ?: "cjyeon1022"
         image = "docker.io/$dockerHubUsername/blackfriday-app"
-        tags = setOf("latest", version.toString())
+        tags = setOf("latest", System.getenv("GITHUB_SHA") ?: version.toString())
     }
     container {
         jvmFlags = listOf("-Xms512m", "-Xmx1024m")
         ports = listOf("8080")
         environment = mapOf<String, String>(
-            "SPRING_PROFILES_ACTIVE" to (System.getenv("SPRING_PROFILES_ACTIVE") ?: "dev"),
+            "SPRING_PROFILES_ACTIVE" to (System.getenv("SPRING_PROFILES_ACTIVE") ?: "prod"),
             "TZ" to "Asia/Seoul",
         )
         creationTime.set("USE_CURRENT_TIMESTAMP")
