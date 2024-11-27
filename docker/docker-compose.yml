@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  ${APP_SERVICE}:
+  app1:
     image: ${DOCKER_IMAGE}
     container_name: ${CONTAINER_NAME}
     ports:
@@ -14,11 +14,26 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    depends_on:
+        mysql:
+            condition: service_healthy
+
+  app2:
+    image: ${DOCKER_IMAGE}
+    container_name: ${CONTAINER_NAME}-2
+    ports:
+      - "${PORT2:-8081}:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
+    networks:
+      - app-network
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0

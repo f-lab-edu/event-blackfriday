@@ -81,15 +81,14 @@ jobs:
     needs: build-and-push
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
-    env:
-      APP_SERVICE: blackfriday-app
-      MYSQL_CONTAINER_NAME: blackfriday-mysql
     steps:
       - uses: actions/checkout@v4
+
       - name: Set branch specific variables
         run: |
           BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
           echo "DOCKER_TAG=$BRANCH_NAME-${{ github.sha }}" >> $GITHUB_ENV
+
       - name: Copy deployment files
         uses: appleboy/scp-action@master
         with:
@@ -99,6 +98,7 @@ jobs:
           source: "docker/,scripts/"
           strip_components: 0
           target: "/app"
+
       - name: Deploy Application
         uses: appleboy/ssh-action@master
         with:
@@ -106,43 +106,23 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
-            echo "Checking directory structure..."
-            ls -la /app
-            ls -la /app/docker
-            ls -la /app/scripts/deploy
-
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               JPA_MODE="none"
             else
               JPA_MODE="update"
             fi
-
+            
             DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
             mkdir -p $DOCKER_CONFIG/cli-plugins
             curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
               -o $DOCKER_CONFIG/cli-plugins/docker-compose
             chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
+            
             cd /app
             cat > .env <<EOL
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            MYSQL_USER=${{ secrets.MYSQL_USER }}
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
-            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
-            CONTAINER_NAME=***-app
-            APP_SERVICE=${{ env.APP_SERVICE }}
-            MYSQL_CONTAINER_NAME=${{ env.MYSQL_CONTAINER_NAME }}
-            EOL
-            
-            echo "Generated .env file:"
-            cat .env
-
             chmod +x ./scripts/deploy/deploy.sh
             ./scripts/deploy/deploy.sh \
               ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
-
 
       - name: Health Check
         run: |

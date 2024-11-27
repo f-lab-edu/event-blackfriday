@@ -10,24 +10,6 @@ NGINX_CONF="../docker/nginx/app.conf"
 CURRENT_PORTS=(8080 8081)
 NEW_PORTS=(8082 8083)
 
-update_nginx_config() {
-    local action=$1
-    local port=$2
-    local temp_file=$(mktemp)
-
-    case $action in
-        "remove")
-            sed "/server localhost:$port;/d" $NGINX_CONF > "$temp_file" || true
-            ;;
-        "add")
-            sed "/upstream app_servers/a\    server localhost:$port;" $NGINX_CONF > "$temp_file" || true
-            ;;
-    esac
-
-    mv "$temp_file" $NGINX_CONF
-    $DOCKER_COMPOSE exec -T blackfriday-nginx nginx -s reload || true
-}
-
 echo "Starting Rolling Deployment..."
 
 cd /app
@@ -57,41 +39,29 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') - Deploying: $NEW_IMAGE" >> "$DEPLOYMENT_HIST
 for i in {0..1}; do
     current_port=${CURRENT_PORTS[$i]}
     new_port=${NEW_PORTS[$i]}
-    old_instance="app$((i+1))_old"
-    new_instance="app$((i+1))_new"
-    old_container="blackfriday-app$((i+1))_old"
-    new_container="blackfriday-app$((i+1))_new"
+    service_name="app$((i+1))"
 
-    echo "Updating $new_instance (Port $current_port -> $new_port)..."
+    echo "Updating $service_name (Port $current_port -> $new_port)..."
 
-    echo "Deploying new version on port $new_port..."
     export DOCKER_IMAGE=$NEW_IMAGE
-    export PORT=$new_port
-    export APP_SERVICE=$new_instance
-    export CONTAINER_NAME=$new_container
+    export PORT1=$new_port
+    export PORT2=$new_port
 
-    $DOCKER_COMPOSE up -d ${APP_SERVICE}
+    $DOCKER_COMPOSE up -d $service_name
 
-    $DOCKER_COMPOSE up -d --no-deps
-
+    echo "Waiting for $service_name to be ready..."
     sleep 10
 
-    update_nginx_config "add" $new_port
+    if [ -f "$NGINX_CONF" ]; then
+        update_nginx_config "add" $new_port
+        sleep 5
+        update_nginx_config "remove" $current_port
+    fi
 
-    sleep 5
-
-    update_nginx_config "remove" $current_port
-
-    export APP_SERVICE=$old_instance
-    export CONTAINER_NAME=$old_container
-    export PORT=$current_port
-    $DOCKER_COMPOSE stop
-    $DOCKER_COMPOSE rm -f
-
-    echo "Successfully updated $new_instance to port $new_port"
-    sleep 5
+    echo "Successfully updated $service_name to port $new_port"
 done
 
+# 정리
 rm -f previous_state.txt
 echo "Rolling deployment completed successfully"
 exit 0
