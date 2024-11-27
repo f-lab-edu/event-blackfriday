@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-DOCKER_COMPOSE="docker compose"
+DOCKER_COMPOSE="docker-compose"
 APP_NAME="blackfriday"
 DEPLOYMENT_HISTORY="/app/.deployment_history"
 NGINX_CONF="/app/nginx/app.conf"
