@@ -1,21 +1,24 @@
+version: '3.8'
+
 services:
   nginx:
     image: nginx:latest
-    container_name: ${CONTAINER_NAME}-nginx
+    container_name: blackfriday-nginx
     ports:
       - "80:80"
     volumes:
-      - ./ngnix/app.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - app
+      - app1
+      - app2
     networks:
       - app-network
 
-  app:
+  app1:
     image: ${DOCKER_IMAGE}
-    container_name: ${CONTAINER_NAME}
-    expose:
-      - "8080"
+    container_name: blackfriday-app1
+    ports:
+      - "${PORT:-8080}:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
@@ -27,6 +30,33 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app2:
+    image: ${DOCKER_IMAGE}
+    container_name: blackfriday-app2
+    ports:
+      - "${PORT:-8081}:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   mysql:
     image: mysql:8.0
