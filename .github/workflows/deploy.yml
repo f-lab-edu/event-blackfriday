@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'feature/**'
+      - 'develop'
       - 'main'
     paths-ignore:
       - '**.md'
@@ -11,6 +12,7 @@ on:
       - '.gitignore'
   pull_request:
     branches:
+      - 'develop'
       - 'main'
     paths-ignore:
       - '**.md'
@@ -50,7 +52,7 @@ jobs:
 
   build-and-push:
     needs: test
-    if: github.ref == 'refs/heads/main' && needs.test.result == 'success'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.test.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,98 +72,65 @@ jobs:
 
       - name: Build and Push with Jib
         run: |
+          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
           ./gradlew jib \
             -Djib.to.image=docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app \
-            -Djib.to.tags=latest,${{ github.sha }}
+            -Djib.to.tags=$BRANCH_NAME-latest,$BRANCH_NAME-${{ github.sha }}
 
-  deploy-blue:
+  deploy:
     needs: build-and-push
-    if: needs.build-and-push.result == 'success'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copy docker-compose files
+      - name: Set branch specific variables
+        run: |
+          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
+          echo "DOCKER_TAG=$BRANCH_NAME-${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Copy deployment files
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.NCP_BLUE_HOST }}
+          host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,nginx/app.conf,deploy.sh"
           target: "/app"
 
-      - name: Deploy to Blue Server
+      - name: Deploy Application
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.NCP_BLUE_HOST }}
+          host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            docker compose down
-            docker pull docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ github.sha }}
-            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ github.sha }} \
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
-            MYSQL_USER=${{ secrets.MYSQL_USER }} \
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            docker compose up -d
+            chmod +x deploy.sh
+            ./deploy.sh ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
-      - name: Health Check Blue
+      - name: Health Check
         run: |
           echo "Waiting for application to initialize..."
-          sleep 60
-          for i in {1..10}; do
-            if curl -s -f http://${{ secrets.NCP_BLUE_HOST }}:8080/health/liveness; then
+          sleep 30
+          for i in {1..5}; do
+            if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
               echo "Health check passed"
               exit 0
             fi
             echo "Attempt $i failed. Retrying..."
             sleep 10
           done
+          echo "Health check failed"
           exit 1
 
-  deploy-green:
-    needs: [deploy-blue]
-    if: needs.deploy-blue.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Copy docker-compose files
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.NCP_GREEN_HOST }}
-          username: deploy-user
-          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"
-          target: "/app"
-
-      - name: Deploy to Green Server
+      - name: Rollback on Failure
+        if: failure()
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.NCP_GREEN_HOST }}
+          host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            docker compose down
-            docker pull docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ github.sha }}
-            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ github.sha }} \
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
-            MYSQL_USER=${{ secrets.MYSQL_USER }} \
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            docker compose up -d
-
-      - name: Health Check Green
-        run: |
-          echo "Waiting for application to initialize..."
-          sleep 60
-          for i in {1..10}; do
-            if curl -s -f http://${{ secrets.NCP_GREEN_HOST }}:8080/health/liveness; then
-              echo "Health check passed"
-              exit 0
-            fi
-            echo "Attempt $i failed. Retrying..."
-            sleep 10
-          done
-          exit 1
+            ./deploy.sh rollback
