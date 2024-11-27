@@ -96,7 +96,7 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           source: "docker/,scripts/"
-          strip_components: 1
+          strip_components: 0
           target: "/app"
 
       - name: Deploy Application
@@ -109,7 +109,7 @@ jobs:
             echo "Checking directory structure..."
             ls -la /app
             ls -la /app/docker
-            ls -la /app/docker/nginx
+            ls -la /app/scripts/deploy
       
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               JPA_MODE="none"
@@ -134,8 +134,8 @@ jobs:
             CONTAINER_NAME=blackfriday
             EOL
             
-            chmod +x ../scripts/deploy/deploy.sh
-            ../scripts/deploy/deploy.sh \
+            chmod +x /app/scripts/deploy/deploy.sh
+            /app/scripts/deploy/deploy.sh \
               ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
       - name: Health Check
@@ -161,5 +161,6 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
-            cd /app
+            cd /app/scripts/deploy
             ./deploy.sh rollback
+

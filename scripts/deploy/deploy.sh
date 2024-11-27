@@ -5,7 +5,7 @@ set -x
 DOCKER_COMPOSE="docker-compose"
 APP_NAME="blackfriday"
 DEPLOYMENT_HISTORY="/app/.deployment_history"
-NGINX_CONF="./nginx/app.conf"
+NGINX_CONF="../docker/nginx/app.conf"
 
 CURRENT_PORTS=(8080 8081)
 NEW_PORTS=(8082 8083)
@@ -17,18 +17,20 @@ update_nginx_config() {
 
     case $action in
         "remove")
-            sed "/server localhost:$port;/d" $NGINX_CONF > "$temp_file"
+            sed "/server localhost:$port;/d" $NGINX_CONF > "$temp_file" || true
             ;;
         "add")
-            sed "/upstream app_servers/a\    server localhost:$port;" $NGINX_CONF > "$temp_file"
+            sed "/upstream app_servers/a\    server localhost:$port;" $NGINX_CONF > "$temp_file" || true
             ;;
     esac
 
     mv "$temp_file" $NGINX_CONF
-    $DOCKER_COMPOSE exec -T nginx nginx -s reload || true
+    $DOCKER_COMPOSE exec -T blackfriday-nginx nginx -s reload || true  # 컨테이너 이름 수정
 }
 
 echo "Starting Rolling Deployment..."
+
+cd /app  # 작업 디렉토리 설정
 
 $DOCKER_COMPOSE ps > previous_state.txt || true
 CURRENT_IMAGE=$(docker ps --filter name=$APP_NAME -q | head -n1 | xargs -I {} docker inspect {} -f '{{.Config.Image}}') || true
