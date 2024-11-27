@@ -96,7 +96,7 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           source: "docker/,scripts/"
-          strip_components: 0
+          strip_components: 1
           target: "/app"
 
       - name: Deploy Application
