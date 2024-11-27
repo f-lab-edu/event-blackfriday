@@ -16,7 +16,6 @@ services:
 
   app1:
     image: ${DOCKER_IMAGE}
-    container_name: blackfriday-app1
     ports:
       - "${PORT:-8080}:8080"
     environment:
@@ -25,9 +24,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -38,7 +34,6 @@ services:
 
   app2:
     image: ${DOCKER_IMAGE}
-    container_name: blackfriday-app2
     ports:
       - "${PORT:-8081}:8080"
     environment:
@@ -47,9 +42,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - app-network
     healthcheck:

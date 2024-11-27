@@ -25,17 +25,28 @@ update_nginx_config() {
     esac
 
     mv "$temp_file" $NGINX_CONF
-    $DOCKER_COMPOSE exec -T blackfriday-nginx nginx -s reload || true  # 컨테이너 이름 수정
+    $DOCKER_COMPOSE exec -T blackfriday-nginx nginx -s reload || true
 }
 
 echo "Starting Rolling Deployment..."
 
-cd /app  # 작업 디렉토리 설정
+cd /app
 
 $DOCKER_COMPOSE ps > previous_state.txt || true
 CURRENT_IMAGE=$(docker ps --filter name=$APP_NAME -q | head -n1 | xargs -I {} docker inspect {} -f '{{.Config.Image}}') || true
 
-NEW_IMAGE=$1
+if [ "$1" == "rollback" ]; then
+    if [ -f previous_image.txt ]; then
+        NEW_IMAGE=$(cat previous_image.txt)
+    else
+        echo "No previous image found for rollback."
+        exit 1
+    fi
+else
+    NEW_IMAGE=$1
+    echo "$CURRENT_IMAGE" > previous_image.txt
+fi
+
 if [ -z "$NEW_IMAGE" ]; then
     echo "Error: No image specified"
     exit 1
@@ -53,7 +64,7 @@ for i in {0..1}; do
     echo "Deploying new version on port $new_port..."
     export DOCKER_IMAGE=$NEW_IMAGE
     export PORT=$new_port
-    $DOCKER_COMPOSE up -d $instance
+    $DOCKER_COMPOSE up -d --no-deps $instance
 
     sleep 10
 
