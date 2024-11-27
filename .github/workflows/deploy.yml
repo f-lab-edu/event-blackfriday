@@ -105,7 +105,7 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
-            cd scripts/deploy
+            cd /app
             chmod +x deploy.sh
             ./deploy.sh ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
