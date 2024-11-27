@@ -106,6 +106,9 @@ jobs:
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
             cd /app
+            mkdir -p docker/nginx
+            mv docker-compose.yml docker/
+            mv app.conf docker/nginx/
             chmod +x deploy.sh
             ./deploy.sh ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
