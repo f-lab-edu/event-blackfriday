@@ -106,7 +106,11 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
-            
+            echo "Checking directory structure..."
+            ls -la /app
+            ls -la /app/docker
+            ls -la /app/docker/nginx
+      
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               JPA_MODE="none"
             else
