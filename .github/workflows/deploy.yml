@@ -95,7 +95,8 @@ jobs:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker/docker-compose.yml,docker/nginx/app.conf,scripts/deploy/deploy.sh"
+          source: "docker/,scripts/"
+          strip_components: 0
           target: "/app"
 
       - name: Deploy Application
@@ -106,11 +107,8 @@ jobs:
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
             cd /app
-            mkdir -p docker/nginx
-            mv docker-compose.yml docker/
-            mv app.conf docker/nginx/
-            chmod +x deploy.sh
-            ./deploy.sh ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
+            chmod +x scripts/deploy/deploy.sh
+            ./scripts/deploy/deploy.sh ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
       - name: Health Check
         run: |
