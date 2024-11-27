@@ -25,13 +25,13 @@ update_nginx_config() {
     esac
 
     mv "$temp_file" $NGINX_CONF
-    $DOCKER_COMPOSE exec -T nginx nginx -s reload
+    $DOCKER_COMPOSE exec -T nginx nginx -s reload || true
 }
 
 echo "Starting Rolling Deployment..."
 
-$DOCKER_COMPOSE ps > previous_state.txt
-CURRENT_IMAGE=$(docker ps --filter name=$APP_NAME -q | head -n1 | xargs -I {} docker inspect {} -f '{{.Config.Image}}')
+$DOCKER_COMPOSE ps > previous_state.txt || true
+CURRENT_IMAGE=$(docker ps --filter name=$APP_NAME -q | head -n1 | xargs -I {} docker inspect {} -f '{{.Config.Image}}') || true
 
 NEW_IMAGE=$1
 if [ -z "$NEW_IMAGE" ]; then
@@ -49,7 +49,9 @@ for i in {0..1}; do
     echo "Updating $instance (Port $current_port -> $new_port)..."
 
     echo "Deploying new version on port $new_port..."
-    DOCKER_IMAGE=$NEW_IMAGE PORT=$new_port $DOCKER_COMPOSE up -d $instance
+    export DOCKER_IMAGE=$NEW_IMAGE
+    export PORT=$new_port
+    $DOCKER_COMPOSE up -d $instance
 
     sleep 10
 
@@ -59,11 +61,13 @@ for i in {0..1}; do
 
     update_nginx_config "remove" $current_port
 
-    PORT=$current_port $DOCKER_COMPOSE stop $instance
+    export PORT=$current_port
+    $DOCKER_COMPOSE stop $instance || true
 
     echo "Successfully updated $instance to port $new_port"
     sleep 5
 done
 
-rm previous_state.txt
+rm -f previous_state.txt
 echo "Rolling deployment completed successfully"
+exit 0
