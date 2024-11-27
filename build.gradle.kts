@@ -28,7 +28,7 @@ jib {
         image = "eclipse-temurin:17-jre-focal"
         platforms {
             platform {
-                architecture = "arm64"
+                architecture = "amd64"
                 os = "linux"
             }
         }
