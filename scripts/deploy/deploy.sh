@@ -70,7 +70,8 @@ for i in {0..1}; do
     export APP_SERVICE=$new_instance
     export CONTAINER_NAME=$new_container
 
-    # 새로운 서비스 시작
+    $DOCKER_COMPOSE up -d ${APP_SERVICE}
+
     $DOCKER_COMPOSE up -d --no-deps
 
     sleep 10
