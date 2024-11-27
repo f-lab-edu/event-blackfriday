@@ -57,14 +57,21 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') - Deploying: $NEW_IMAGE" >> "$DEPLOYMENT_HIST
 for i in {0..1}; do
     current_port=${CURRENT_PORTS[$i]}
     new_port=${NEW_PORTS[$i]}
-    instance="app$((i+1))"
+    old_instance="app$((i+1))_old"
+    new_instance="app$((i+1))_new"
+    old_container="blackfriday-app$((i+1))_old"
+    new_container="blackfriday-app$((i+1))_new"
 
-    echo "Updating $instance (Port $current_port -> $new_port)..."
+    echo "Updating $new_instance (Port $current_port -> $new_port)..."
 
     echo "Deploying new version on port $new_port..."
     export DOCKER_IMAGE=$NEW_IMAGE
     export PORT=$new_port
-    $DOCKER_COMPOSE up -d --no-deps $instance
+    export APP_SERVICE=$new_instance
+    export CONTAINER_NAME=$new_container
+
+    # 새로운 서비스 시작
+    $DOCKER_COMPOSE up -d --no-deps
 
     sleep 10
 
@@ -74,10 +81,13 @@ for i in {0..1}; do
 
     update_nginx_config "remove" $current_port
 
+    export APP_SERVICE=$old_instance
+    export CONTAINER_NAME=$old_container
     export PORT=$current_port
-    $DOCKER_COMPOSE stop $instance || true
+    $DOCKER_COMPOSE stop
+    $DOCKER_COMPOSE rm -f
 
-    echo "Successfully updated $instance to port $new_port"
+    echo "Successfully updated $new_instance to port $new_port"
     sleep 5
 done
 

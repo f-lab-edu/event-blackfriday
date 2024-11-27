@@ -131,15 +131,17 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
             DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
-            CONTAINER_NAME=blackfriday
+            CONTAINER_NAME=blackfriday-app
+            APP_SERVICE=${{ env.APP_SERVICE }}
+            MYSQL_CONTAINER_NAME=${{ env.MYSQL_CONTAINER_NAME }}
             EOL
-      
+
             echo "Generated .env file:"
             cat .env
-      
+
             chmod +x ./scripts/deploy/deploy.sh
-              ./scripts/deploy/deploy.sh \
-                    ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
+            ./scripts/deploy/deploy.sh \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
 
 
       - name: Health Check
