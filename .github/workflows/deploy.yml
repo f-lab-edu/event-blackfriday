@@ -98,7 +98,7 @@ jobs:
           source: "docker/docker-compose.yml,docker/.env"
           target: "/app"
 
-      - name: Setup Docker and Deploy
+      - name: Deploy to NCP
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
@@ -118,23 +118,15 @@ jobs:
             MYSQL_CONTAINER_NAME=blackfriday-mysql
             EOL
             
-            if ! command -v docker &> /dev/null; then
-              sudo apt-get update
-              sudo apt-get install -y docker.io
-              sudo usermod -aG docker $USER
-            fi
-            
-            if ! command -v docker-compose &> /dev/null; then
-              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-              mkdir -p $DOCKER_CONFIG/cli-plugins
-              curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-                -o $DOCKER_CONFIG/cli-plugins/docker-compose
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            fi
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
+              -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
             
             cd docker
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
-            docker-compose up -d
+            $DOCKER_CONFIG/cli-plugins/docker-compose up -d
 
       - name: Health Check
         run: |
