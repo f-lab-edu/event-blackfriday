@@ -133,7 +133,7 @@ jobs:
           echo "Waiting for application to initialize..."
           sleep 30
           for i in {1..5}; do
-            if curl -s -f http://${{ secrets.NCP_LOAD_BALANCER_HOST }}/actuator/health; then
+            if curl -s -f "http://${{ secrets.NCP_LOAD_BALANCER_HOST }}/actuator/health"; then
               echo "Health check passed"
               exit 0
             fi
