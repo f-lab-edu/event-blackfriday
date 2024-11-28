@@ -98,6 +98,22 @@ jobs:
           source: "docker/docker-compose.yml,docker/.env"
           target: "/app"
 
+      - name: Install Docker and Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_HOST }}
+          username: deploy-user
+          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+          script: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo usermod -aG docker $USER
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
+              -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
       - name: Deploy to NCP
         uses: appleboy/ssh-action@master
         with:
