@@ -95,7 +95,7 @@ jobs:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,.env"
+          source: "docker/docker-compose.yml,docker/.env"
           target: "/app"
 
       - name: Deploy to NCP
