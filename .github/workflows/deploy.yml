@@ -98,23 +98,7 @@ jobs:
           source: "docker/docker-compose.yml,docker/.env"
           target: "/app"
 
-      - name: Install Docker and Docker Compose
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.NCP_HOST }}
-          username: deploy-user
-          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          script: |
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-            sudo usermod -aG docker $USER
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-              -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
-      - name: Deploy to NCP
+      - name: Setup Docker and Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
@@ -123,7 +107,7 @@ jobs:
           script: |
             cd /app
             
-            cat > .env <<EOL
+            cat > docker/.env <<EOL
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
@@ -134,12 +118,21 @@ jobs:
             MYSQL_CONTAINER_NAME=blackfriday-mysql
             EOL
             
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-              -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo usermod -aG docker $USER
+            fi
             
+            if ! command -v docker-compose &> /dev/null; then
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
+                -o $DOCKER_CONFIG/cli-plugins/docker-compose
+              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            fi
+            
+            cd docker
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
             docker-compose up -d
 
@@ -148,7 +141,7 @@ jobs:
           echo "Waiting for application to initialize..."
           sleep 30
           for i in {1..5}; do
-            if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
+            if curl -s -f http://${{ secrets.NCP_HOST }}:8080/actuator/health; then
               echo "Health check passed"
               exit 0
             fi
