@@ -1,34 +1,22 @@
 version: '3.8'
 
 services:
-  app1:
+  app:
     image: ${DOCKER_IMAGE}
-    container_name: ${CONTAINER_NAME}
+    container_name: blackfriday-app
     ports:
-      - "${PORT}:8080"
+      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
       - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
-    networks:
-      - app-network
-    depends_on:
-        mysql:
-            condition: service_healthy
-
-  app2:
-    image: ${DOCKER_IMAGE}
-    container_name: ${CONTAINER_NAME}-2
-    ports:
-      - "${PORT2:-8081}:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
-      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${JPA_DDL_AUTO:-update}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - app-network
     depends_on:
@@ -37,7 +25,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: ${MYSQL_CONTAINER_NAME}
+    container_name: blackfriday-mysql
     ports:
       - "3306:3306"
     environment:
@@ -47,7 +35,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
     healthcheck:
@@ -55,11 +42,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mysql_data:
-    name: blackfriday-mysql-data

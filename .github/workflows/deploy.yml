@@ -89,28 +89,34 @@ jobs:
           BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
           echo "DOCKER_TAG=$BRANCH_NAME-${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Copy deployment files
+      - name: Copy docker-compose file
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker/,scripts/"
-          strip_components: 0
+          source: "docker-compose.yml,.env"
           target: "/app"
 
-      - name: Deploy Application
+      - name: Deploy to NCP
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-              JPA_MODE="none"
-            else
-              JPA_MODE="update"
-            fi
+            cd /app
+            
+            cat > .env <<EOL
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
+            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
+            CONTAINER_NAME=blackfriday-app
+            MYSQL_CONTAINER_NAME=blackfriday-mysql
+            EOL
             
             DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
             mkdir -p $DOCKER_CONFIG/cli-plugins
@@ -118,11 +124,8 @@ jobs:
               -o $DOCKER_CONFIG/cli-plugins/docker-compose
             chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
             
-            cd /app
-            cat > .env <<EOL
-            chmod +x ./scripts/deploy/deploy.sh
-            ./scripts/deploy/deploy.sh \
-              ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }} || exit 1
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
+            docker-compose up -d
 
       - name: Health Check
         run: |
@@ -138,15 +141,3 @@ jobs:
           done
           echo "Health check failed"
           exit 1
-
-      - name: Rollback on Failure
-        if: failure()
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.NCP_HOST }}
-          username: deploy-user
-          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          script: |
-            cd /app/scripts/deploy
-            ./deploy.sh rollback
-
