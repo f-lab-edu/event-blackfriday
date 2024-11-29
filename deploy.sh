@@ -1,15 +1,22 @@
 #!/bin/bash
 
-cd "$(dirname "$0")"
-cd docker
+set -x
 
-pwd
+cd "$(dirname "$0")"
+echo "Current working directory: $(pwd)"
 ls -la
 
-CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp | cut -d ':' -f2 || echo "8080")
-CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp | cut -d ':' -f2 || echo "8081")
+if [ ! -f "docker/docker-compose.yml" ]; then
+    echo "Error: docker-compose.yml not found"
+    exit 1
+fi
+
+cd docker
 
 docker ps -a
+
+CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8080")
+CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8081")
 
 echo "Current ports - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
 

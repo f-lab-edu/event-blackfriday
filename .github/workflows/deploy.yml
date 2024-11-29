@@ -106,20 +106,16 @@ jobs:
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
           script: |
+            mkdir -p /app
             cd /app
             
-            if ! command -v docker &> /dev/null; then
-              sudo apt-get update
-              sudo apt-get install -y docker.io
-              sudo usermod -aG docker $USER
+            if ! command -v docker compose &> /dev/null; then
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
+                -o $DOCKER_CONFIG/cli-plugins/docker-compose
+              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
             fi
-            
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-              -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            export PATH=$DOCKER_CONFIG/cli-plugins:$PATH
             
             cat > docker/.env <<EOL
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
@@ -138,14 +134,22 @@ jobs:
       - name: Health Check
         run: |
           echo "Waiting for application to initialize..."
-          sleep 30
-          for i in {1..5}; do
-            if curl -s -f http://${{ secrets.NCP_HOST }}:80/actuator/health; then
-              echo "Health check passed"
-              exit 0
-            fi
-            echo "Attempt $i failed. Retrying..."
-            sleep 10
+          sleep 60
+          
+          for i in {1..10}; do
+          if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
+          echo "Health check passed"
+          exit 0
+          fi
+          echo "Attempt $i failed. Retrying after 20 seconds..."
+          sleep 20
           done
+          
+          echo "Health check failed. Collecting debug information..."
+          curl -v http://${{ secrets.NCP_HOST }}/actuator/health
+          echo "Docker containers status:"
+          ssh deploy-user@${{ secrets.NCP_HOST }} 'docker ps -a'
+          echo "Docker logs:"
+          ssh deploy-user@${{ secrets.NCP_HOST }} 'docker logs blackfriday-app1'
           echo "Health check failed"
           exit 1
