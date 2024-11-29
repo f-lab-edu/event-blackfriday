@@ -89,13 +89,13 @@ jobs:
           BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
           echo "DOCKER_TAG=$BRANCH_NAME-${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Copy docker-compose file
+      - name: Copy configuration files
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker/docker-compose.yml,docker/.env"
+          source: "docker/docker-compose.yml,docker/.env,docker/nginx/conf.d/app.conf,deploy.sh"
           target: "/app"
 
       - name: Deploy to NCP
@@ -114,26 +114,19 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
             DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
-            CONTAINER_NAME=blackfriday-app
-            MYSQL_CONTAINER_NAME=blackfriday-mysql
+            APP1_PORT=8080
+            APP2_PORT=8081
             EOL
             
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-              -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            
-            cd docker
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
-            $DOCKER_CONFIG/cli-plugins/docker-compose up -d
+            chmod +x deploy.sh
+            ./deploy.sh
 
       - name: Health Check
         run: |
           echo "Waiting for application to initialize..."
           sleep 30
           for i in {1..5}; do
-            if curl -s -f "http://${{ secrets.NCP_LOAD_BALANCER_HOST }}/actuator/health"; then
+            if curl -s -f http://${{ secrets.NCP_HOST }}:80/actuator/health; then
               echo "Health check passed"
               exit 0
             fi
