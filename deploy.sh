@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /app/docker
+
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 DOCKER_COMPOSE="${DOCKER_CONFIG}/cli-plugins/docker-compose"
 
