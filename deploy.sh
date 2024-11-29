@@ -1,9 +1,15 @@
 #!/bin/bash
 
-cd /app/docker
+cd "$(dirname "$0")"
+cd docker
+
+pwd
+ls -la
 
 CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp | cut -d ':' -f2 || echo "8080")
 CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp | cut -d ':' -f2 || echo "8081")
+
+docker ps -a
 
 echo "Current ports - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
 

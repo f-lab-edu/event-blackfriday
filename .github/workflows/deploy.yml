@@ -95,8 +95,9 @@ jobs:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
-          source: "docker/*"
+          source: "docker/*, deploy.sh"
           target: "/app"
+          strip_components: 0
 
       - name: Deploy to NCP
         uses: appleboy/ssh-action@master
