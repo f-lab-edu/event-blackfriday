@@ -29,6 +29,18 @@ CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp 2>/dev/null | cut -d ':' -
 CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8081")
 log "Current ports - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
 
+if [ "$CURRENT_PORT1" = "8080" ]; then
+    sed -i 's/APP1_PORT=8080/APP1_PORT=8082/' .env
+else
+    sed -i 's/APP1_PORT=8082/APP1_PORT=8080/' .env
+fi
+
+if [ "$CURRENT_PORT2" = "8081" ]; then
+    sed -i 's/APP2_PORT=8081/APP2_PORT=8083/' .env
+else
+    sed -i 's/APP2_PORT=8083/APP2_PORT=8081/' .env
+fi
+
 log "Starting MySQL..."
 docker compose up -d mysql
 
