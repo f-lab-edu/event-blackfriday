@@ -1,43 +1,58 @@
 #!/bin/bash
 
-set -x
+set -e
 
-cd "$(dirname "$0")"
-echo "Current working directory: $(pwd)"
-ls -la
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
 
-if [ ! -f "docker/docker-compose.yml" ]; then
-    echo "Error: docker-compose.yml not found"
+cd "$(dirname "$0")/docker"
+log "Changed to directory: $(pwd)"
+
+if ! command -v docker compose &> /dev/null; then
+    log "ERROR: Docker Compose not found"
     exit 1
 fi
 
-cd docker
-
+log "Checking current container status..."
 docker ps -a
 
 CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8080")
 CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8081")
 
-echo "Current ports - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
+log "Current ports - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
 
-if [ "$CURRENT_PORT1" = "8080" ]; then
-    export APP1_PORT=8082
-else
-    export APP1_PORT=8080
+if [ ! -f ".env" ]; then
+    log "ERROR: .env file not found"
+    exit 1
 fi
 
-if [ "$CURRENT_PORT2" = "8081" ]; then
-    export APP2_PORT=8083
-else
-    export APP2_PORT=8081
+log "Starting deployment of app1..."
+docker compose up -d --no-deps app1
+if [ $? -ne 0 ]; then
+    log "ERROR: Failed to deploy app1"
+    exit 1
 fi
 
-echo "New ports - APP1: $APP1_PORT, APP2: $APP2_PORT"
+log "Waiting for app1 to start..."
+sleep 10
 
-echo "Deploying app1..."
-docker-compose -f docker-compose.yml up -d --no-deps app1
+log "Starting deployment of app2..."
+docker compose up -d --no-deps app2
+if [ $? -ne 0 ]; then
+    log "ERROR: Failed to deploy app2"
+    exit 1
+fi
 
-echo "Deploying app2..."
-docker-compose -f docker-compose.yml up -d --no-deps app2
+log "Waiting for app2 to start..."
+sleep 10
 
-echo "Deployment completed"
+# 배포 상태 확인
+log "Checking deployment status..."
+if docker ps | grep -q "blackfriday-app1" && docker ps | grep -q "blackfriday-app2"; then
+    log "Deployment completed successfully"
+else
+    log "ERROR: Deployment verification failed"
+    docker ps
+    exit 1
+fi

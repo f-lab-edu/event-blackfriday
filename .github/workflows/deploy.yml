@@ -77,19 +77,14 @@ jobs:
             -Djib.to.image=docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app \
             -Djib.to.tags=$BRANCH_NAME-latest,$BRANCH_NAME-${{ github.sha }}
 
+
   deploy:
-    needs: build-and-push
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.build-and-push.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set branch specific variables
-        run: |
-          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's/refs\/heads\///')
-          echo "DOCKER_TAG=$BRANCH_NAME-${{ github.sha }}" >> $GITHUB_ENV
-
-      - name: Copy configuration files
+      - name: Copy deployment files
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
@@ -99,37 +94,55 @@ jobs:
           target: "/app"
           strip_components: 0
 
-      - name: Deploy to NCP
+      - name: Deploy application
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCP_HOST }}
           username: deploy-user
           key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+          script_stop: true
           script: |
-            mkdir -p /app
             cd /app
+            echo "Starting deployment process..."
             
+            # 단계 2: Docker Compose 설치 확인 및 설치
             if ! command -v docker compose &> /dev/null; then
+              echo "Installing Docker Compose..."
               DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
               mkdir -p $DOCKER_CONFIG/cli-plugins
               curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
                 -o $DOCKER_CONFIG/cli-plugins/docker-compose
               chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+              export PATH=$DOCKER_CONFIG/cli-plugins:$PATH
             fi
             
+            echo "Creating environment file..."
             cat > docker/.env <<EOL
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
-            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
+            DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ github.sha }}
             APP1_PORT=8080
             APP2_PORT=8081
+            NGINX_PORT=80
             EOL
             
             chmod +x deploy.sh
             ./deploy.sh
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_HOST }}
+          username: deploy-user
+          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+          script: |
+            echo "Verifying deployment..."
+            docker ps
+            docker logs blackfriday-app1 --tail 50
+            docker logs blackfriday-app2 --tail 50
 
       - name: Health Check
         run: |
