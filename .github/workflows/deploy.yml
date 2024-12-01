@@ -40,6 +40,7 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
+            ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
@@ -137,12 +138,12 @@ jobs:
           sleep 60
           
           for i in {1..10}; do
-          if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
-          echo "Health check passed"
-          exit 0
-          fi
-          echo "Attempt $i failed. Retrying after 20 seconds..."
-          sleep 20
+            if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed. Retrying after 20 seconds..."
+            sleep 20
           done
           
           echo "Health check failed. Collecting debug information..."
