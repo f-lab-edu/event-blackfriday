@@ -1,0 +1,105 @@
+### 인증 불필요 API ###
+
+### 회원 가입
+POST http://localhost:8080/api/v1/members/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test1234!",
+  "name": "TestUser"
+}
+
+### 로그인
+POST http://localhost:8080/api/v1/members/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test1234!"
+}
+
+> {%
+    client.global.set("auth_token", response.headers.valueOf("X-Auth-Token"));
+%}
+
+### 인증 필요 API ###
+
+### 프로필 조회
+GET http://localhost:8080/api/v1/members/profiles/me
+X-Auth-Token: {{auth_token}}
+
+### 프로필 정보 수정
+PUT http://localhost:8080/api/v1/members/profiles/me/details
+Content-Type: application/json
+X-Auth-Token: {{auth_token}}
+
+{
+  "name": "UpdatedName",
+  "password": "NewTest1234!"
+}
+
+### 로그아웃
+POST http://localhost:8080/api/v1/members/logout
+X-Auth-Token: {{auth_token}}
+
+### 계정 삭제
+DELETE http://localhost:8080/api/v1/members/accounts/me
+X-Auth-Token: {{auth_token}}
+
+### 에러 케이스 테스트 ###
+
+### 이미 존재하는 이메일로 회원가입
+POST http://localhost:8080/api/v1/members/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test1234!",
+  "name": "TestUser"
+}
+
+### 잘못된 이메일 형식
+POST http://localhost:8080/api/v1/members/signup
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "Test1234!",
+  "name": "TestUser"
+}
+
+### 잘못된 비밀번호 형식
+POST http://localhost:8080/api/v1/members/signup
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "short",
+  "name": "TestUser"
+}
+
+### 존재하지 않는 이메일로 로그인
+POST http://localhost:8080/api/v1/members/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "Test1234!"
+}
+
+### 잘못된 비밀번호로 로그인
+POST http://localhost:8080/api/v1/members/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "WrongPassword1!"
+}
+
+### 인증 토큰 없이 프로필 조회
+GET http://localhost:8080/api/v1/members/profile
+
+### 잘못된 인증 토큰으로 프로필 조회
+GET http://localhost:8080/api/v1/members/profile
+X-Auth-Token: invalid-token
