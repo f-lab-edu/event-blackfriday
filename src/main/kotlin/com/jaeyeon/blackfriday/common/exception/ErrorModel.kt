@@ -26,6 +26,18 @@ enum class ErrorCode(
     INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-004", "Closure depth는 0 이상이어야 합니다"),
     INVALID_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY-005", "카테고리를 찾을 수 없습니다."),
     INVALID_CATEGORY_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-006", "중복된 카테고리 이름입니다."),
+
+    INVALID_MEMBER_EMAIL(HttpStatus.BAD_REQUEST, "MEMBER-001", "유효하지 않은 이메일입니다."),
+    INVALID_MEMBER_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER-002", "유효하지 않은 비밀번호입니다."),
+    INVALID_MEMBER_NAME(HttpStatus.BAD_REQUEST, "MEMBER-003", "유효하지 않은 이름입니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-004", "회원을 찾을 수 없습니다."),
+    MEMBER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "MEMBER-005", "이미 존재하는 회원입니다."),
+    ALREADY_SUBSCRIBED(HttpStatus.BAD_REQUEST, "MEMBER-006", "이미 구독 중인 회원입니다."),
+    ALREADY_WITHDRAWN(HttpStatus.BAD_REQUEST, "MEMBER-007", "이미 탈퇴한 회원입니다."),
+    NOT_SUBSCRIBED(HttpStatus.BAD_REQUEST, "MEMBER-008", "구독 중이 아닌 회원입니다."),
+    EXPIRED_PRIME_MEMBERSHIP(HttpStatus.BAD_REQUEST, "MEMBER-009", "만료된 프라임 멤버십입니다."),
+
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH-001", "인증이 필요합니다."),
 }
 
 data class ErrorResponse(
