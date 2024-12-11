@@ -8,12 +8,58 @@ management:
       show-details: always
       probes:
         enabled: true
+  health:
+    redis:
+      enabled: true
+
+spring:
+  session:
+    store-type: redis
+    redis:
+      namespace: "blackfriday:session"
+      flush-mode: on_save
+      cleanup-cron: "0 */30 * * * *"
+
+  data:
+    redis:
+      client-type: lettuce
+      connect-timeout: 2s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+      repositories:
+        enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  show-actuator: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      timeout: 3600s
 
 ---
 spring:
   config:
     activate:
       on-profile: local
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD}
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:blackfriday
@@ -30,6 +76,11 @@ spring:
   config:
     activate:
       on-profile: prod
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}

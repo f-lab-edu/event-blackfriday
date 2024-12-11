@@ -54,6 +54,9 @@ class Product(
     @Column(nullable = false)
     var isDeleted: Boolean = false,
 
+    @Column(name = "member_id")
+    var memberId: Long? = null,
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var status: ProductStatus = ACTIVE,
