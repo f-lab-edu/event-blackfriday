@@ -46,11 +46,13 @@ class RedisConfig(
             )
             .build()
 
-        val config = RedisStandaloneConfiguration(host, port).apply {
+        val redisConfig = RedisStandaloneConfiguration().apply {
+            hostName = host
+            this.port = port
             setPassword(password)
         }
 
-        return LettuceConnectionFactory(config, clientConfig)
+        return LettuceConnectionFactory(redisConfig, clientConfig)
     }
 
     @Bean
