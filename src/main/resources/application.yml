@@ -12,13 +12,22 @@ management:
     redis:
       enabled: true
 
+logging:
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss}] [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.jaeyeon.blackfriday: DEBUG
+    org.springframework.web: INFO
+    org.springframework.session: DEBUG
+
 spring:
   session:
     store-type: redis
     redis:
       namespace: "blackfriday:session"
       flush-mode: on_save
-      cleanup-cron: "0 */30 * * * *"
+      cleanup-cron: "0 */60 * * * *"
 
   data:
     redis:
@@ -29,7 +38,7 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 2
-          max-wait: -1ms
+          max-wait: 2000ms
       repositories:
         enabled: false
 

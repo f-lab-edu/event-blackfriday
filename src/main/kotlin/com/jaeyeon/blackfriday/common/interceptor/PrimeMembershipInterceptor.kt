@@ -2,6 +2,7 @@ package com.jaeyeon.blackfriday.common.interceptor
 
 import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.annotation.PrimeOnly
+import com.jaeyeon.blackfriday.common.security.session.Roles
 import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
 import jakarta.servlet.http.HttpServletRequest
@@ -24,7 +25,7 @@ class PrimeMembershipInterceptor : HandlerInterceptor {
         val sessionUser = session.getAttribute(USER_KEY) as? SessionUser
             ?: throw MemberException.unauthorized()
 
-        if (!sessionUser.roles.contains("ROLE_PRIME")) {
+        if (!sessionUser.roles.contains(Roles.PRIME)) {
             throw MemberException.unauthorized()
         }
 

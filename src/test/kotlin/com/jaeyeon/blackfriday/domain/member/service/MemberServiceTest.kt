@@ -63,6 +63,7 @@ class MemberServiceTest : BehaviorSpec({
         When("로그인을 시도할 때") {
             val request = LoginRequest(email, password)
 
+            every { httpSession.getAttribute(USER_KEY) } returns null
             every { memberRepository.findByEmail(any()) } returns member
             every { passwordEncoder.matches(any(), any()) } returns true
             every { httpSession.setAttribute(any(), any()) } just runs
@@ -73,6 +74,7 @@ class MemberServiceTest : BehaviorSpec({
                 result.email shouldBe email
                 result.name shouldBe name
 
+                verify { httpSession.getAttribute(USER_KEY) }
                 verify { memberRepository.findByEmail(email) }
                 verify { passwordEncoder.matches(password, encodedPassword) }
                 verify { httpSession.setAttribute(USER_KEY, any()) }
@@ -92,15 +94,11 @@ class MemberServiceTest : BehaviorSpec({
         }
 
         When("내 정보를 조회할 때") {
-            every { memberRepository.findByIdOrNull(1L) } returns member
-
             Then("회원 정보가 조회된다") {
                 val result = memberService.getMyInfo(member)
 
                 result.email shouldBe email
                 result.name shouldBe name
-
-                verify { memberRepository.findByIdOrNull(1L) }
             }
         }
 
@@ -115,16 +113,12 @@ class MemberServiceTest : BehaviorSpec({
 
             Then("회원 정보가 수정된다") {
                 val result = memberService.updateMember(member, request)
-
                 result.name shouldBe newName
-
-                verify { memberRepository.findByIdOrNull(1L) }
                 verify { memberRepository.save(any()) }
             }
         }
 
         When("회원 탈퇴를 시도할 때") {
-            every { memberRepository.findByIdOrNull(any()) } returns member
             every { memberRepository.save(any()) } returns member
             every { httpSession.invalidate() } just runs
 
@@ -132,8 +126,6 @@ class MemberServiceTest : BehaviorSpec({
                 shouldNotThrow<Exception> {
                     memberService.withdraw(member)
                 }
-
-                verify { memberRepository.findByIdOrNull(1L) }
                 verify { memberRepository.save(any()) }
                 verify { httpSession.invalidate() }
             }

@@ -1,5 +1,6 @@
 package com.jaeyeon.blackfriday.common.config
 
+import com.jaeyeon.blackfriday.common.security.session.SecurityConstants
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
@@ -34,13 +35,13 @@ class SwaggerConfig {
             .components(
                 Components()
                     .addSecuritySchemes(
-                        "X-Auth-Token",
+                        SecurityConstants.AUTH_HEADER,
                         SecurityScheme()
                             .type(SecurityScheme.Type.APIKEY)
                             .`in`(SecurityScheme.In.HEADER)
-                            .name("X-Auth-Token"),
+                            .name(SecurityConstants.AUTH_HEADER),
                     ),
             )
-            .addSecurityItem(SecurityRequirement().addList("X-Auth-Token"))
+            .addSecurityItem(SecurityRequirement().addList(SecurityConstants.AUTH_HEADER))
     }
 }

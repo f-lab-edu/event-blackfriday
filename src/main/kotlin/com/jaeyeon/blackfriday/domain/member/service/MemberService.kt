@@ -35,6 +35,10 @@ class MemberService(
 
     @Transactional(readOnly = true)
     fun login(request: LoginRequest): MemberResponse {
+        if (httpSession.getAttribute(USER_KEY) != null) {
+            httpSession.invalidate()
+        }
+
         val member = memberRepository.findByEmail(request.email)
             ?: throw MemberException.notFound()
 
@@ -52,24 +56,21 @@ class MemberService(
 
     @Transactional(readOnly = true)
     fun getMyInfo(member: Member): MemberResponse {
-        return MemberResponse.from(getCurrentMember(member.id!!))
+        return MemberResponse.from(member)
     }
 
     fun updateMember(member: Member, request: UpdateMemberRequest): MemberResponse {
-        val currentMember = getCurrentMember(member.id!!)
-
-        request.name?.let { currentMember.updateName(it) }
+        request.name?.let { member.updateName(it) }
         request.password?.let {
-            currentMember.updatePassword(passwordEncoder.encode(it))
+            member.updatePassword(passwordEncoder.encode(it))
         }
 
-        return MemberResponse.from(memberRepository.save(currentMember))
+        return MemberResponse.from(memberRepository.save(member))
     }
 
     fun withdraw(member: Member) {
-        val currentMember = getCurrentMember(member.id!!)
-        currentMember.withdraw()
-        memberRepository.save(currentMember)
+        member.withdraw()
+        memberRepository.save(member)
         httpSession.invalidate()
     }
 

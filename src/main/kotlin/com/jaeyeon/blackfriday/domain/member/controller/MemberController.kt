@@ -14,13 +14,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Member", description = "회원 API")
@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController
 class MemberController(
     private val memberService: MemberService,
 ) {
+
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "회원 가입",
         description = "새로운 회원을 등록합니다.",
@@ -41,10 +43,8 @@ class MemberController(
         ],
     )
     @PostMapping("/signup")
-    fun signUp(@Valid @RequestBody request: SignUpRequest): ResponseEntity<MemberResponse> {
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(memberService.signUp(request))
+    fun signUp(@Valid @RequestBody request: SignUpRequest): MemberResponse {
+        return memberService.signUp(request)
     }
 
     @Operation(
@@ -59,9 +59,8 @@ class MemberController(
         ],
     )
     @PostMapping("/login")
-    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<MemberResponse> {
-        val response = memberService.login(request)
-        return ResponseEntity.ok(response)
+    fun login(@Valid @RequestBody request: LoginRequest): MemberResponse {
+        return memberService.login(request)
     }
 
     @Operation(
@@ -76,8 +75,8 @@ class MemberController(
     )
     @LoginRequired
     @GetMapping("/profiles/me")
-    fun getMyProfile(@CurrentUser member: Member): ResponseEntity<MemberResponse> {
-        return ResponseEntity.ok(memberService.getMyInfo(member))
+    fun getMyProfile(@CurrentUser member: Member): MemberResponse {
+        return memberService.getMyInfo(member)
     }
 
     @Operation(
@@ -91,15 +90,15 @@ class MemberController(
             ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
         ],
     )
-    @LoginRequired
     @PutMapping("/profiles/me/details")
     fun updateProfileDetails(
         @CurrentUser member: Member,
         @Valid @RequestBody request: UpdateMemberRequest,
-    ): ResponseEntity<MemberResponse> {
-        return ResponseEntity.ok(memberService.updateMember(member, request))
+    ): MemberResponse {
+        return memberService.updateMember(member, request)
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "로그아웃",
         description = "현재 로그인된 세션을 종료합니다.",
@@ -112,11 +111,11 @@ class MemberController(
     )
     @LoginRequired
     @PostMapping("/logout")
-    fun logout(): ResponseEntity<Unit> {
+    fun logout() {
         memberService.logout()
-        return ResponseEntity.noContent().build()
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "회원 탈퇴",
         description = "로그인한 회원의 계정을 삭제합니다.",
@@ -129,8 +128,7 @@ class MemberController(
     )
     @LoginRequired
     @DeleteMapping("/accounts/me")
-    fun deleteMyAccount(@CurrentUser member: Member): ResponseEntity<Unit> {
+    fun deleteMyAccount(@CurrentUser member: Member) {
         memberService.withdraw(member)
-        return ResponseEntity.noContent().build()
     }
 }

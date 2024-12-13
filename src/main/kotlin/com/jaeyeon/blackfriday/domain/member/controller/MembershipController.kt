@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -36,8 +35,8 @@ class MembershipController(
     )
     @LoginRequired
     @PostMapping("/subscribe")
-    fun upgradeToPrime(@CurrentUser member: Member): ResponseEntity<MemberResponse> {
-        return ResponseEntity.ok(membershipService.updateToPrime(member))
+    fun upgradeToPrime(@CurrentUser member: Member): MemberResponse {
+        return membershipService.updateToPrime(member)
     }
 
     @Operation(
@@ -54,8 +53,8 @@ class MembershipController(
     @PrimeOnly
     @LoginRequired
     @PostMapping("/unsubscribe")
-    fun downgradeToNormal(@CurrentUser member: Member): ResponseEntity<MemberResponse> {
-        return ResponseEntity.ok(membershipService.downgradeToNormal(member))
+    fun downgradeToNormal(@CurrentUser member: Member): MemberResponse {
+        return membershipService.downgradeToNormal(member)
     }
 
     @Operation(
@@ -70,8 +69,7 @@ class MembershipController(
     )
     @LoginRequired
     @GetMapping("/status")
-    fun checkMembershipStatus(@CurrentUser member: Member): ResponseEntity<MemberResponse> {
-        val membershipStatus = membershipService.checkPrimeMembership(member)
-        return ResponseEntity.ok(membershipStatus)
+    fun checkMembershipStatus(@CurrentUser member: Member): MemberResponse {
+        return membershipService.checkPrimeMembership(member)
     }
 }

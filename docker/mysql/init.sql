@@ -48,7 +48,6 @@ CREATE TABLE products (
     is_deleted BOOLEAN NOT NULL DEFAULT false,
     status VARCHAR(20) NOT NULL,
     category_id BIGINT,
-    member_id BIGINT,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     FOREIGN KEY (category_id) REFERENCES categories(category_id)
@@ -60,6 +59,5 @@ CREATE INDEX idx_members_email ON members(email);
 CREATE INDEX idx_category_is_deleted ON categories(is_deleted);
 CREATE INDEX idx_products_is_deleted ON products(is_deleted);
 CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_member ON products(member_id);
 CREATE INDEX idx_category_closure_ancestor ON category_closure(ancestor_id);
 CREATE INDEX idx_category_closure_descendant ON category_closure(descendant_id);
