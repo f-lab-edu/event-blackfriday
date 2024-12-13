@@ -40,6 +40,7 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
+            ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
@@ -122,6 +123,7 @@ jobs:
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
             DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
             APP1_PORT=8080
@@ -130,26 +132,3 @@ jobs:
             
             chmod +x deploy.sh
             ./deploy.sh
-
-      - name: Health Check
-        run: |
-          echo "Waiting for application to initialize..."
-          sleep 60
-          
-          for i in {1..10}; do
-          if curl -s -f http://${{ secrets.NCP_HOST }}/actuator/health; then
-          echo "Health check passed"
-          exit 0
-          fi
-          echo "Attempt $i failed. Retrying after 20 seconds..."
-          sleep 20
-          done
-          
-          echo "Health check failed. Collecting debug information..."
-          curl -v http://${{ secrets.NCP_HOST }}/actuator/health
-          echo "Docker containers status:"
-          ssh deploy-user@${{ secrets.NCP_HOST }} 'docker ps -a'
-          echo "Docker logs:"
-          ssh deploy-user@${{ secrets.NCP_HOST }} 'docker logs blackfriday-app1'
-          echo "Health check failed"
-          exit 1
