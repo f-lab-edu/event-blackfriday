@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
+import io.lettuce.core.ClientOptions
+import io.lettuce.core.protocol.ProtocolVersion
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -37,6 +39,11 @@ class RedisConfig(
             .clientName("blackfriday-session")
             .commandTimeout(ofSeconds(2))
             .shutdownTimeout(ZERO)
+            .clientOptions(
+                ClientOptions.builder()
+                    .protocolVersion(ProtocolVersion.RESP2)
+                    .build(),
+            )
             .build()
 
         val config = RedisStandaloneConfiguration(host, port).apply {
