@@ -54,11 +54,8 @@ CREATE TABLE products (
 );
 
 -- 인덱스 추가
-<<<<<<< HEAD
-=======
 CREATE INDEX idx_members_is_deleted ON members(is_deleted);
 CREATE INDEX idx_members_email ON members(email);
->>>>>>> feature/member-domain
 CREATE INDEX idx_category_is_deleted ON categories(is_deleted);
 CREATE INDEX idx_products_is_deleted ON products(is_deleted);
 CREATE INDEX idx_products_category ON products(category_id);
