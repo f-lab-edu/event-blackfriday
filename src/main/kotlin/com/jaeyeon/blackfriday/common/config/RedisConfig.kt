@@ -13,10 +13,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
+import java.time.Duration.ZERO
+import java.time.Duration.ofSeconds
 
 @Configuration
 @EnableRedisHttpSession(
@@ -30,10 +33,17 @@ class RedisConfig(
 ) {
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
+        val clientConfig = LettuceClientConfiguration.builder()
+            .clientName("blackfriday-session")
+            .commandTimeout(ofSeconds(2))
+            .shutdownTimeout(ZERO)
+            .build()
+
         val config = RedisStandaloneConfiguration(host, port).apply {
             setPassword(password)
         }
-        return LettuceConnectionFactory(config)
+
+        return LettuceConnectionFactory(config, clientConfig)
     }
 
     @Bean
