@@ -45,7 +45,6 @@ class RedisConfig(
                     .build(),
             )
             .build()
-
         val redisConfig = RedisStandaloneConfiguration().apply {
             hostName = host
             this.port = port
