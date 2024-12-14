@@ -87,7 +87,7 @@ spring:
       on-profile: prod
   data:
     redis:
-      host: redis
+      host: blackfriday-redis
       port: 6379
       password: ${REDIS_PASSWORD}
       timeout: 5000
