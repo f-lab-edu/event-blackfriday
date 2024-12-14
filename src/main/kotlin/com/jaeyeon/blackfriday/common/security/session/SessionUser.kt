@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.jaeyeon.blackfriday.domain.member.domain.Member
+import com.jaeyeon.blackfriday.domain.member.domain.enum.MembershipType
 import java.time.LocalDateTime
 
 object SecurityConstants {
@@ -24,6 +25,8 @@ object Roles {
 data class SessionUser(
     val id: Long,
     val email: String,
+    val name: String,
+    val membershipType: MembershipType,
     val roles: Set<String>,
     @JsonSerialize(using = LocalDateTimeSerializer::class)
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
@@ -33,6 +36,8 @@ data class SessionUser(
         fun from(member: Member) = SessionUser(
             id = member.id!!,
             email = member.email,
+            name = member.name,
+            membershipType = member.membershipType,
             roles = member.membershipType.getRoleNames(),
             createdAt = LocalDateTime.now(),
         )

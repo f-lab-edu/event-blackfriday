@@ -124,10 +124,12 @@ jobs:
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            REDIS_PORT=6379
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
             DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/blackfriday-app:${{ env.DOCKER_TAG }}
             APP1_PORT=8080
             APP2_PORT=8081
+            JPA_DDL_AUTO=none
             EOL
             
             chmod +x deploy.sh
