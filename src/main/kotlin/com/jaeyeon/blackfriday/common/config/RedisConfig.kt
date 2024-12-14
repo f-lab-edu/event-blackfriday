@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.protocol.ProtocolVersion
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -29,13 +30,16 @@ import java.time.Duration.ofSeconds
     redisNamespace = "blackfriday:session",
 )
 class RedisConfig(
-    @Value("\${spring.data.redis.host}") private val host: String,
-    @Value("\${spring.data.redis.port}") private val port: Int,
-    @Value("\${spring.data.redis.password}") private val password: String,
+    @Value("\${spring.data.redis.host}") private val configRedisHost: String,
+    @Value("\${spring.data.redis.port}") private val configRedisPort: Int,
+    @Value("\${spring.data.redis.password}") private val configRedisPassword: String,
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        val clientConfig = LettuceClientConfiguration.builder()
+        LettuceClientConfiguration.builder()
             .clientName("blackfriday-session")
             .commandTimeout(ofSeconds(2))
             .shutdownTimeout(ZERO)
@@ -45,13 +49,17 @@ class RedisConfig(
                     .build(),
             )
             .build()
-        val redisConfig = RedisStandaloneConfiguration().apply {
-            hostName = host
-            this.port = port
-            setPassword(password)
+
+        log.info("Redis 연결 설정 시작 - host: {}, port: {}", configRedisHost, configRedisPort)
+
+        val config = RedisStandaloneConfiguration().apply {
+            hostName = configRedisHost
+            this.port = configRedisPort
+            setPassword(configRedisPassword)
         }
 
-        return LettuceConnectionFactory(redisConfig, clientConfig)
+        log.info("Redis 연결 팩토리 생성 완료")
+        return LettuceConnectionFactory(config)
     }
 
     @Bean
