@@ -101,7 +101,7 @@ services:
     container_name: blackfriday-redis
     ports:
       - "6379:6379"
-    command: [ "redis-server", "--requires", "${REDIS_PASSWORD}" ]
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
     volumes:
       - redis_data:/data
     networks:
