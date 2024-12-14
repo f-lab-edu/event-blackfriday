@@ -19,7 +19,7 @@ logging:
     root: INFO
     com.jaeyeon.blackfriday: DEBUG
     org.springframework.web: INFO
-    org.springframework.session: DEBUG
+    org.springframework.session: INFO
 
 spring:
   session:
