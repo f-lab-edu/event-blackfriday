@@ -32,11 +32,11 @@ spring:
   data:
     redis:
       client-type: lettuce
-      connect-timeout: 2s
+      connect-timeout: 5s
       lettuce:
         pool:
           max-active: 8
-          max-idle: 8
+          max-idle: 4
           min-idle: 2
           max-wait: 2000ms
       repositories:

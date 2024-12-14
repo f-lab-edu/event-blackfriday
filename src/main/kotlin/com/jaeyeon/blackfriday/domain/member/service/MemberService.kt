@@ -10,7 +10,6 @@ import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
 import com.jaeyeon.blackfriday.domain.member.dto.UpdateMemberRequest
 import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import jakarta.servlet.http.HttpSession
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -72,11 +71,5 @@ class MemberService(
         member.withdraw()
         memberRepository.save(member)
         httpSession.invalidate()
-    }
-
-    @Transactional(readOnly = true)
-    fun getCurrentMember(id: Long): Member {
-        return memberRepository.findByIdOrNull(id)
-            ?: throw MemberException.notFound()
     }
 }
