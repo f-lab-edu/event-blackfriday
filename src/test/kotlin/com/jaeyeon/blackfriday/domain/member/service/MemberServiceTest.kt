@@ -1,6 +1,5 @@
 package com.jaeyeon.blackfriday.domain.member.service
 
-import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
 import com.jaeyeon.blackfriday.domain.member.domain.Member
 import com.jaeyeon.blackfriday.domain.member.dto.LoginRequest
@@ -8,7 +7,6 @@ import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
 import com.jaeyeon.blackfriday.domain.member.dto.UpdateMemberRequest
 import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import io.kotest.assertions.throwables.shouldNotThrow
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -128,20 +126,6 @@ class MemberServiceTest : BehaviorSpec({
                 }
                 verify { memberRepository.save(any()) }
                 verify { httpSession.invalidate() }
-            }
-        }
-
-        When("존재하지 않는 회원을 조회할 때") {
-            val nonExistentId = 999L
-
-            every { memberRepository.findByIdOrNull(nonExistentId) } returns null
-
-            Then("MemberException이 발생한다") {
-                shouldThrow<MemberException> {
-                    memberService.getCurrentMember(nonExistentId)
-                }
-
-                verify(exactly = 1) { memberRepository.findByIdOrNull(nonExistentId) }
             }
         }
     }

@@ -16,7 +16,7 @@ import org.springframework.web.method.support.ModelAndViewContainer
 
 @Component
 class CurrentUserArgumentResolver(
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
 ) : HandlerMethodArgumentResolver {
 
     override fun supportsParameter(parameter: MethodParameter): Boolean {
