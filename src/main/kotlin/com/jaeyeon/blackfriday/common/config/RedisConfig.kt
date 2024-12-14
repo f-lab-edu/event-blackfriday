@@ -41,7 +41,7 @@ class RedisConfig(
             .shutdownTimeout(ZERO)
             .clientOptions(
                 ClientOptions.builder()
-                    .protocolVersion(ProtocolVersion.RESP2)
+                    .protocolVersion(ProtocolVersion.RESP3)
                     .build(),
             )
             .build()
