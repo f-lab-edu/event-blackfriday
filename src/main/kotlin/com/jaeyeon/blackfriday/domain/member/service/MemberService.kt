@@ -64,7 +64,7 @@ class MemberService(
             member.updatePassword(passwordEncoder.encode(it))
         }
 
-        return MemberResponse.from(memberRepository.save(member))
+        return MemberResponse.from(member)
     }
 
     fun withdraw(member: Member) {
