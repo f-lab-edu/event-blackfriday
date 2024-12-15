@@ -10,6 +10,7 @@ import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
 import com.jaeyeon.blackfriday.domain.member.dto.UpdateMemberRequest
 import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import jakarta.servlet.http.HttpSession
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -58,7 +59,10 @@ class MemberService(
         return MemberResponse.from(member)
     }
 
-    fun updateMember(member: Member, request: UpdateMemberRequest): MemberResponse {
+    fun updateMember(memberId: Long, request: UpdateMemberRequest): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
         request.name?.let { member.updateName(it) }
         request.password?.let {
             member.updatePassword(passwordEncoder.encode(it))

@@ -95,7 +95,7 @@ class MemberController(
         @CurrentUser member: Member,
         @Valid @RequestBody request: UpdateMemberRequest,
     ): MemberResponse {
-        return memberService.updateMember(member, request)
+        return memberService.updateMember(member.id!!, request)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

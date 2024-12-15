@@ -17,6 +17,7 @@ import io.mockk.verify
 import jakarta.servlet.http.HttpSession
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 
 @ExtendWith(MockitoExtension::class)
@@ -100,12 +101,16 @@ class MemberServiceTest : BehaviorSpec({
         }
 
         When("회원 정보를 수정할 때") {
+            val memberId = 1L
             val newName = "NewName"
             val request = UpdateMemberRequest(name = newName)
 
+            every { memberRepository.findByIdOrNull(memberId) } returns member
+
             Then("회원 정보가 수정된다") {
-                val result = memberService.updateMember(member, request)
+                val result = memberService.updateMember(memberId, request)
                 result.name shouldBe newName
+                verify { memberRepository.findByIdOrNull(memberId) }
             }
         }
 
