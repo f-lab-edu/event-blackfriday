@@ -8,59 +8,31 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
-import io.lettuce.core.ClientOptions
-import io.lettuce.core.protocol.ProtocolVersion
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializer
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
-import java.time.Duration.ZERO
-import java.time.Duration.ofSeconds
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.DockerImageName
 
 @Configuration
-@EnableRedisHttpSession(
-    maxInactiveIntervalInSeconds = 3600,
-    redisNamespace = "blackfriday:session",
-)
-@Profile("prod")
-class RedisConfig(
-    @Value("\${spring.data.redis.host}") private val configRedisHost: String,
-    @Value("\${spring.data.redis.port}") private val configRedisPort: Int,
-    @Value("\${spring.data.redis.password}") private val configRedisPassword: String,
-) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
+@Profile("local")
+class LocalRedisConfig {
+    private val redisContainer = GenericContainer(DockerImageName.parse("redis:7.4.1-alpine")).apply {
+        withExposedPorts(6379)
+        start()
+    }
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        LettuceClientConfiguration.builder()
-            .clientName("blackfriday-session")
-            .commandTimeout(ofSeconds(2))
-            .shutdownTimeout(ZERO)
-            .clientOptions(
-                ClientOptions.builder()
-                    .protocolVersion(ProtocolVersion.RESP2)
-                    .build(),
-            )
-            .build()
-
-        log.info("Redis 연결 설정 시작 - host: {}, port: {}", configRedisHost, configRedisPort)
-
         val config = RedisStandaloneConfiguration().apply {
-            hostName = configRedisHost
-            this.port = configRedisPort
-            setPassword(configRedisPassword)
+            hostName = redisContainer.host
+            port = redisContainer.firstMappedPort
         }
-
-        log.info("Redis 연결 팩토리 생성 완료")
         return LettuceConnectionFactory(config)
     }
 

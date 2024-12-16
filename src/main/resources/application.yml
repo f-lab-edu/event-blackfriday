@@ -28,6 +28,7 @@ spring:
       namespace: "blackfriday:session"
       flush-mode: on_save
       cleanup-cron: "0 */60 * * * *"
+      repository-type: indexed
 
   data:
     redis:
@@ -68,7 +69,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: ${REDIS_PASSWORD}
+      password:
   h2:
     console:
         enabled: true
