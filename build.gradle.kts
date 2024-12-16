@@ -81,7 +81,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     implementation(platform("org.testcontainers:testcontainers-bom:1.20.1"))
     implementation("org.testcontainers:testcontainers:1.20.1")
-    implementation("org.testcontainers:redis:1.19.3")
+    implementation("com.redis:testcontainers-redis:2.0.1")
 
     // Kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.9.0")
