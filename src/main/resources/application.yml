@@ -8,31 +8,114 @@ management:
       show-details: always
       probes:
         enabled: true
+  health:
+    redis:
+      enabled: true
+
+logging:
+  pattern:
+    console: "[%d{yyyy-MM-dd HH:mm:ss}] [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.jaeyeon.blackfriday: DEBUG
+    org.springframework.web: INFO
+    org.springframework.session: INFO
+
+spring:
+  session:
+    store-type: redis
+    redis:
+      namespace: "blackfriday:session"
+      flush-mode: on_save
+      cleanup-cron: "0 */60 * * * *"
+      repository-type: indexed
+
+  data:
+    redis:
+      client-type: lettuce
+      connect-timeout: 5s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 2
+          max-wait: 2000ms
+      repositories:
+        enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  show-actuator: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      timeout: 3600s
 
 ---
 spring:
   config:
     activate:
       on-profile: local
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+  h2:
+    console:
+        enabled: true
+        path: /h2-console
+        settings:
+          web-allow-others: false
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:blackfriday
     username: ${H2_USERNAME}
-    password: ${H2_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 
 ---
 spring:
   config:
     activate:
       on-profile: prod
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: ${REDIS_PASSWORD}
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 2
+          max-wait: 2000ms
+        shutdown-timeout: 200ms
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}
+    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
   jpa:
@@ -43,3 +126,6 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+logging:
+  level:
+    org.hibernate.SQL_SLOW: INFO

@@ -55,6 +55,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.security:spring-security-crypto:5.7.1")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.session:spring-session-data-redis")
+
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
     // Kotlin
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -72,13 +78,16 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.security:spring-security-test")
+    implementation(platform("org.testcontainers:testcontainers-bom:1.20.1"))
+    implementation("org.testcontainers:testcontainers:1.20.1")
+    implementation("com.redis:testcontainers-redis:2.0.1")
 
     // Kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.9.0")
     testImplementation("io.kotest:kotest-assertions-core:5.9.1")
     testImplementation("io.kotest:kotest-property:5.9.1")
     testImplementation("io.kotest.extensions:kotest-extensions-spring:1.3.0")
-
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

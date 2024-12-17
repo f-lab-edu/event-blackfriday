@@ -1,6 +1,20 @@
 CREATE DATABASE IF NOT EXISTS blackfriday;
 USE blackfriday;
 
+-- Members 테이블
+CREATE TABLE members (
+    member_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(60) NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    membership_type ENUM('NORMAL', 'PRIME') NOT NULL DEFAULT 'NORMAL',
+    membership_start_date DATETIME(6),
+    membership_end_date DATETIME(6),
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)
+);
+
 -- Categories 테이블
 CREATE TABLE categories (
     category_id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -40,6 +54,8 @@ CREATE TABLE products (
 );
 
 -- 인덱스 추가
+CREATE INDEX idx_members_is_deleted ON members(is_deleted);
+CREATE INDEX idx_members_email ON members(email);
 CREATE INDEX idx_category_is_deleted ON categories(is_deleted);
 CREATE INDEX idx_products_is_deleted ON products(is_deleted);
 CREATE INDEX idx_products_category ON products(category_id);
