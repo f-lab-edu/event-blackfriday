@@ -3,7 +3,6 @@ package com.jaeyeon.blackfriday.domain.member.service
 import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
-import com.jaeyeon.blackfriday.domain.member.domain.Member
 import com.jaeyeon.blackfriday.domain.member.dto.LoginRequest
 import com.jaeyeon.blackfriday.domain.member.dto.MemberResponse
 import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
@@ -55,7 +54,9 @@ class MemberService(
     }
 
     @Transactional(readOnly = true)
-    fun getMyInfo(member: Member): MemberResponse {
+    fun getMyInfo(memberId: Long): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
         return MemberResponse.from(member)
     }
 
@@ -71,7 +72,10 @@ class MemberService(
         return MemberResponse.from(member)
     }
 
-    fun withdraw(member: Member) {
+    fun withdraw(memberId: Long) {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
         member.withdraw()
         memberRepository.save(member)
         httpSession.invalidate()

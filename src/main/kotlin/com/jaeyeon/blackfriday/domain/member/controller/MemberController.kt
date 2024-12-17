@@ -2,7 +2,6 @@ package com.jaeyeon.blackfriday.domain.member.controller
 
 import com.jaeyeon.blackfriday.common.security.annotation.CurrentUser
 import com.jaeyeon.blackfriday.common.security.annotation.LoginRequired
-import com.jaeyeon.blackfriday.domain.member.domain.Member
 import com.jaeyeon.blackfriday.domain.member.dto.LoginRequest
 import com.jaeyeon.blackfriday.domain.member.dto.MemberResponse
 import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
@@ -75,8 +74,8 @@ class MemberController(
     )
     @LoginRequired
     @GetMapping("/profiles/me")
-    fun getMyProfile(@CurrentUser member: Member): MemberResponse {
-        return memberService.getMyInfo(member)
+    fun getMyProfile(@CurrentUser memberId: Long): MemberResponse {
+        return memberService.getMyInfo(memberId)
     }
 
     @Operation(
@@ -92,10 +91,10 @@ class MemberController(
     )
     @PutMapping("/profiles/me/details")
     fun updateProfileDetails(
-        @CurrentUser member: Member,
+        @CurrentUser memberId: Long,
         @Valid @RequestBody request: UpdateMemberRequest,
     ): MemberResponse {
-        return memberService.updateMember(member.id!!, request)
+        return memberService.updateMember(memberId, request)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -128,7 +127,7 @@ class MemberController(
     )
     @LoginRequired
     @DeleteMapping("/accounts/me")
-    fun deleteMyAccount(@CurrentUser member: Member) {
-        memberService.withdraw(member)
+    fun deleteMyAccount(@CurrentUser memberId: Long) {
+        memberService.withdraw(memberId)
     }
 }
