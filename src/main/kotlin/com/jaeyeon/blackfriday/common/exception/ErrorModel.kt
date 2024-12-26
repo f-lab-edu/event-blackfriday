@@ -19,6 +19,7 @@ enum class ErrorCode(
     INVALID_PRODUCT_STOCK_QUANTITY(HttpStatus.BAD_REQUEST, "PRODUCT-004", "유효하지 않는 재고 수량입니다."),
     NOT_ENOUGH_STOCK(HttpStatus.BAD_REQUEST, "PRODUCT-005", "재고가 부족합니다."),
     INVALID_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT-006", "상품을 찾을 수 없습니다."),
+    PRODUCT_NOT_OWNER(HttpStatus.BAD_REQUEST, "PRODUCT-007", "상품의 소유자가 아닙니다."),
 
     INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-001", "카테고리 이름은 2-50자 사이여야 합니다."),
     INVALID_CATEGORY_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-002", "카테고리는 최대 4단계까지만 허용됩니다."),
@@ -26,6 +27,7 @@ enum class ErrorCode(
     INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-004", "Closure depth는 0 이상이어야 합니다"),
     INVALID_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY-005", "카테고리를 찾을 수 없습니다."),
     INVALID_CATEGORY_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-006", "중복된 카테고리 이름입니다."),
+    CATEGORY_NOT_OWNER(HttpStatus.BAD_REQUEST, "CATEGORY-007", "카테고리의 소유자가 아닙니다."),
 
     INVALID_MEMBER_EMAIL(HttpStatus.BAD_REQUEST, "MEMBER-001", "유효하지 않은 이메일입니다."),
     INVALID_MEMBER_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER-002", "유효하지 않은 비밀번호입니다."),
@@ -38,6 +40,19 @@ enum class ErrorCode(
     EXPIRED_PRIME_MEMBERSHIP(HttpStatus.BAD_REQUEST, "MEMBER-009", "만료된 프라임 멤버십입니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH-001", "인증이 필요합니다."),
+
+    INVALID_TOTAL_AMOUNT(HttpStatus.BAD_REQUEST, "ORDER-001", "유효하지 않은 총 주문 금액입니다."),
+    INVALID_CANCEL_STATUS(HttpStatus.BAD_REQUEST, "ORDER-002", "취소할 수 없는 주문 상태입니다."),
+    INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "ORDER-003", "유효하지 않은 주문 상태 전이입니다."),
+    INVALID_ORDER_QUANTITY(HttpStatus.BAD_REQUEST, "ORDER-004", "주문 수량은 0보다 커야 합니다."),
+    INVALID_ORDER_PRICE(HttpStatus.BAD_REQUEST, "ORDER-005", "주문 가격은 0 이상이어야 합니다."),
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER-006", "주문을 찾을 수 없습니다."),
+    INVALID_ORDER_STATUS(HttpStatus.BAD_REQUEST, "ORDER-007", "유효하지 않은 주문 상태입니다."),
+    ORDER_NOT_OWNER(HttpStatus.BAD_REQUEST, "ORDER-008", "주문의 소유자가 아닙니다."),
+
+    INVALID_PAYMENT_AMOUNT(HttpStatus.BAD_REQUEST, "PAYMENT-001", "유효하지 않은 결제 금액입니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT-002", "결제를 찾을 수 없습니다."),
+    INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "PAYMENT-003", "유효하지 않은 결제 상태입니다."),
 }
 
 data class ErrorResponse(
