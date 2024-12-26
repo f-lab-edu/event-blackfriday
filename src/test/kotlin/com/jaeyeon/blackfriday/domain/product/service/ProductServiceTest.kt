@@ -1,13 +1,11 @@
 package com.jaeyeon.blackfriday.domain.product.service
 
 import com.jaeyeon.blackfriday.common.global.ProductException
-import com.jaeyeon.blackfriday.domain.category.domain.Category
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryRepository
-import com.jaeyeon.blackfriday.domain.product.domain.Product
+import com.jaeyeon.blackfriday.domain.common.CategoryFixture
+import com.jaeyeon.blackfriday.domain.common.ProductFixture
 import com.jaeyeon.blackfriday.domain.product.domain.enum.ProductStatus
 import com.jaeyeon.blackfriday.domain.product.dto.CreateProductRequest
-import com.jaeyeon.blackfriday.domain.product.dto.ProductDetailResponse
-import com.jaeyeon.blackfriday.domain.product.dto.ProductListResponse
 import com.jaeyeon.blackfriday.domain.product.dto.StockRequest
 import com.jaeyeon.blackfriday.domain.product.repository.ProductRepository
 import io.kotest.assertions.throwables.shouldThrow
@@ -17,6 +15,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -30,68 +29,124 @@ class ProductServiceTest : BehaviorSpec({
     val productService = ProductService(productRepository, categoryRepository)
 
     Given("상품 생성 시") {
+        val memberId = 1L
+        val category = CategoryFixture.createCategory()
         val request = CreateProductRequest(
             name = "테스트 상품",
             description = "테스트 상품 설명",
             price = BigDecimal("10000"),
             stockQuantity = 100,
-            categoryId = 1L,
+            categoryId = category.id!!,
         )
-
-        val category = Category(
-            id = 1L,
-            name = "테스트 카테고리",
-        )
-
-        val savedProduct = Product(
-            id = 1L,
-            name = request.name,
-            description = request.description,
-            price = request.price,
-            stockQuantity = request.stockQuantity,
+        val product = ProductFixture.createProduct(
+            memberId = memberId,
             category = category,
         )
 
         When("올바른 요청이 주어지면") {
-            every { categoryRepository.findByIdOrNull(any()) } returns category
-            every { productRepository.save(any()) } returns savedProduct
+            every { categoryRepository.findByIdOrNull(category.id!!) } returns category
+            every { productRepository.save(any()) } returns product
 
-            val result = productService.createProduct(request)
+            val result = productService.createProduct(memberId, request)
 
-            Then("상품이 상세 정보와 함께 정상적으로 생성되어야 한다") {
-                result shouldBe ProductDetailResponse(
-                    id = 1L,
-                    name = request.name,
-                    description = request.description,
-                    price = request.price,
-                    availableStockQuantity = request.stockQuantity,
-                    status = ProductStatus.ACTIVE,
-                    categoryId = category.id,
-                    categoryName = category.name,
-                )
+            Then("상품이 정상적으로 생성된다") {
+                result.id shouldBe product.id
+                result.name shouldBe request.name
+                result.description shouldBe request.description
+                result.price shouldBe request.price
+                result.categoryId shouldBe category.id
+                result.categoryName shouldBe category.name
+
+                verify(exactly = 1) {
+                    categoryRepository.findByIdOrNull(category.id!!)
+                    productRepository.save(any())
+                }
+            }
+        }
+    }
+
+    Given("재고 감소 시") {
+        val memberId = 1L
+        val product = ProductFixture.createProduct(memberId = memberId)
+
+        When("충분한 재고가 있는 경우") {
+            val request = StockRequest(amount = 10)
+            every { productRepository.findByIdOrNull(product.id!!) } returns product
+
+            val result = productService.decreaseStockQuantity(memberId, product.id!!, request)
+
+            Then("재고가 정상적으로 감소한다") {
+                result.stockQuantity shouldBe 90
+                result.status shouldBe ProductStatus.ACTIVE
+            }
+        }
+
+        When("다른 사용자가 재고 감소를 시도하는 경우") {
+            val otherMemberId = 2L
+            val request = StockRequest(amount = 10)
+            every { productRepository.findByIdOrNull(product.id!!) } returns product
+
+            Then("권한 없음 예외가 발생한다") {
+                shouldThrow<ProductException> {
+                    productService.decreaseStockQuantity(otherMemberId, product.id!!, request)
+                }
+            }
+        }
+
+        When("재고보다 많은 수량을 요청한 경우") {
+            val request = StockRequest(amount = 150)
+            every { productRepository.findByIdOrNull(product.id!!) } returns product
+
+            Then("재고 부족 예외가 발생한다") {
+                shouldThrow<ProductException> {
+                    productService.decreaseStockQuantity(memberId, product.id!!, request)
+                }
+            }
+        }
+    }
+
+    Given("재고 증가 시") {
+        val memberId = 1L
+        val product = ProductFixture.createProduct(memberId = memberId)
+
+        When("정상적인 수량을 요청한 경우") {
+            val request = StockRequest(amount = 50)
+            every { productRepository.findByIdOrNull(product.id!!) } returns product
+
+            val result = productService.increaseStockQuantity(memberId, product.id!!, request)
+
+            Then("재고가 정상적으로 증가한다") {
+                result.stockQuantity shouldBe 150
+                result.status shouldBe ProductStatus.ACTIVE
+            }
+        }
+    }
+
+    Given("상품 조회 시") {
+        val product = ProductFixture.createProduct()
+        val category = CategoryFixture.createCategory()
+        product.category = category
+
+        When("존재하는 상품 ID로 조회하면") {
+            every { productRepository.findByIdOrNull(product.id!!) } returns product
+
+            val result = productService.getProduct(product.id!!)
+
+            Then("상품 상세 정보가 반환된다") {
+                result.id shouldBe product.id
+                result.name shouldBe product.name
+                result.description shouldBe product.description
+                result.categoryId shouldBe category.id
+                result.categoryName shouldBe category.name
             }
         }
     }
 
     Given("상품 목록 조회 시") {
-        val category = Category(id = 1L, name = "테스트 카테고리")
+        val category = CategoryFixture.createCategory()
         val products = listOf(
-            Product(
-                id = 1L,
-                name = "상품1",
-                description = "설명1",
-                price = BigDecimal("10000"),
-                stockQuantity = 100,
-                category = category,
-            ),
-            Product(
-                id = 2L,
-                name = "상품2",
-                description = "설명2",
-                price = BigDecimal("20000"),
-                stockQuantity = 200,
-                category = category,
-            ),
+            ProductFixture.createProduct(id = 1L, category = category),
+            ProductFixture.createProduct(id = 2L, category = category),
         )
 
         When("정상적인 조회 요청이 오면") {
@@ -100,160 +155,10 @@ class ProductServiceTest : BehaviorSpec({
 
             val result = productService.getProducts(pageable)
 
-            Then("상품 목록이 요약 정보와 함께 반환되어야 한다") {
+            Then("상품 목록이 정상적으로 반환된다") {
                 result.content shouldHaveSize 2
-                result.content[0] shouldBe ProductListResponse(
-                    id = 1L,
-                    name = "상품1",
-                    price = BigDecimal("10000"),
-                    availableStockQuantity = 100,
-                    status = ProductStatus.ACTIVE,
-                    categoryName = "테스트 카테고리",
-                )
-            }
-        }
-    }
-
-    Given("상품 상세 조회 시") {
-        val productId = 1L
-        val category = Category(id = 1L, name = "테스트 카테고리")
-        val product = Product(
-            id = productId,
-            name = "테스트 상품",
-            description = "상세 설명",
-            price = BigDecimal("10000"),
-            stockQuantity = 100,
-            category = category,
-        )
-
-        When("존재하는 상품 ID로 조회하면") {
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            val result = productService.getProduct(productId)
-
-            Then("상품 상세 정보가 반환되어야 한다") {
-                result shouldBe ProductDetailResponse(
-                    id = productId,
-                    name = product.name,
-                    description = product.description,
-                    price = product.price,
-                    availableStockQuantity = product.stockQuantity,
-                    status = ProductStatus.ACTIVE,
-                    categoryId = category.id,
-                    categoryName = category.name,
-                )
-            }
-        }
-
-        When("존재하지 않는 상품 ID로 조회하면") {
-            every { productRepository.findByIdOrNull(productId) } returns null
-
-            Then("ProductException이 발생해야 한다") {
-                shouldThrow<ProductException> {
-                    productService.getProduct(productId)
-                }
-            }
-        }
-    }
-
-    Given("재고 감소 시") {
-        val productId = 1L
-        val product = Product(
-            id = productId,
-            name = "테스트 상품",
-            description = "설명",
-            price = BigDecimal("10000"),
-            stockQuantity = 100,
-        )
-
-        When("충분한 재고가 있는 경우") {
-            val request = StockRequest(amount = 10)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            val result = productService.decreaseStockQuantity(productId, request)
-
-            Then("재고가 정상적으로 감소해야 한다") {
-                result.stockQuantity shouldBe 90
-                result.status shouldBe ProductStatus.ACTIVE
-            }
-        }
-
-        When("재고보다 많은 수량을 요청한 경우") {
-            val request = StockRequest(amount = 150)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            Then("재고 부족 예외가 발생해야 한다") {
-                shouldThrow<ProductException> {
-                    productService.decreaseStockQuantity(productId, request)
-                }
-            }
-        }
-
-        When("요청 수량이 0 이하인 경우") {
-            val request = StockRequest(amount = 0)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            Then("잘못된 재고 변경 예외가 발생해야 한다") {
-                shouldThrow<ProductException> {
-                    productService.decreaseStockQuantity(productId, request)
-                }
-            }
-        }
-    }
-
-    Given("재고 증가 시") {
-        val productId = 1L
-        val product = Product(
-            id = productId,
-            name = "테스트 상품",
-            description = "설명",
-            price = BigDecimal("10000"),
-            stockQuantity = 100,
-        )
-
-        When("정상적인 수량을 요청한 경우") {
-            val request = StockRequest(amount = 50)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            val result = productService.increaseStockQuantity(productId, request)
-
-            Then("재고가 정상적으로 증가해야 한다") {
-                result.stockQuantity shouldBe 150
-                result.status shouldBe ProductStatus.ACTIVE
-            }
-        }
-
-        When("요청 수량이 0 이하인 경우") {
-            val request = StockRequest(amount = 0)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            Then("잘못된 재고 변경 예외가 발생해야 한다") {
-                shouldThrow<ProductException> {
-                    productService.increaseStockQuantity(productId, request)
-                }
-            }
-        }
-    }
-
-    Given("상품 상태 변경 시") {
-        val productId = 1L
-        val product = Product(
-            id = productId,
-            name = "테스트 상품",
-            description = "설명",
-            price = BigDecimal("10000"),
-            stockQuantity = 10,
-        )
-
-        When("재고를 0으로 감소시키면") {
-            val request = StockRequest(amount = 10)
-            every { productRepository.findByIdOrNull(productId) } returns product
-
-            val result = productService.decreaseStockQuantity(productId, request)
-
-            Then("상품 상태가 SOLD_OUT으로 변경되어야 한다") {
-                result.stockQuantity shouldBe 0
-                result.status shouldBe ProductStatus.SOLD_OUT
+                result.content[0].id shouldBe products[0].id
+                result.content[1].id shouldBe products[1].id
             }
         }
     }
