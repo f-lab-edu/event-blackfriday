@@ -1,5 +1,7 @@
 package com.jaeyeon.blackfriday.domain.product.controller
 
+import com.jaeyeon.blackfriday.common.security.annotation.CurrentUser
+import com.jaeyeon.blackfriday.common.security.annotation.LoginRequired
 import com.jaeyeon.blackfriday.domain.product.dto.CreateProductRequest
 import com.jaeyeon.blackfriday.domain.product.dto.ProductDetailResponse
 import com.jaeyeon.blackfriday.domain.product.dto.ProductListResponse
@@ -45,8 +47,12 @@ class ProductController(
         ],
     )
     @PostMapping
-    fun createProduct(@Valid @RequestBody request: CreateProductRequest): ProductDetailResponse {
-        return productService.createProduct(request)
+    @LoginRequired
+    fun createProduct(
+        @CurrentUser memberId: Long,
+        @Valid @RequestBody request: CreateProductRequest,
+    ): ProductDetailResponse {
+        return productService.createProduct(memberId, request)
     }
 
     @Operation(summary = "상품 수정", description = "기존 상품 정보를 수정합니다.")
@@ -58,11 +64,13 @@ class ProductController(
         ],
     )
     @PutMapping("/{id}")
+    @LoginRequired
     fun updateProduct(
+        @CurrentUser memberId: Long,
         @Parameter(description = "상품 ID") @PathVariable id: Long,
         @Valid @RequestBody request: UpdateProductRequest,
     ): ProductDetailResponse {
-        return productService.updateProduct(id, request)
+        return productService.updateProduct(memberId, id, request)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -74,8 +82,12 @@ class ProductController(
         ],
     )
     @DeleteMapping("/{id}")
-    fun deleteProduct(@Parameter(description = "상품 ID") @PathVariable id: Long) {
-        productService.deleteProduct(id)
+    @LoginRequired
+    fun deleteProduct(
+        @CurrentUser memberId: Long,
+        @Parameter(description = "상품 ID") @PathVariable id: Long,
+    ) {
+        productService.deleteProduct(memberId, id)
     }
 
     @Operation(summary = "상품 상세 조회", description = "상품의 상세 정보를 조회합니다.")
@@ -143,11 +155,13 @@ class ProductController(
         ],
     )
     @PostMapping("/{id}/stock/increase")
+    @LoginRequired
     fun increaseStockQuantity(
+        @CurrentUser memberId: Long,
         @Parameter(description = "상품 ID") @PathVariable id: Long,
         @Valid @RequestBody request: StockRequest,
     ): ProductStockResponse {
-        return productService.increaseStockQuantity(id, request)
+        return productService.increaseStockQuantity(memberId, id, request)
     }
 
     @Operation(summary = "재고 감소", description = "상품의 재고를 감소시킵니다.")
@@ -159,10 +173,12 @@ class ProductController(
         ],
     )
     @PostMapping("/{id}/stock/decrease")
+    @LoginRequired
     fun decreaseStockQuantity(
+        @CurrentUser memberId: Long,
         @Parameter(description = "상품 ID") @PathVariable id: Long,
         @Valid @RequestBody request: StockRequest,
     ): ProductStockResponse {
-        return productService.decreaseStockQuantity(id, request)
+        return productService.decreaseStockQuantity(memberId, id, request)
     }
 }

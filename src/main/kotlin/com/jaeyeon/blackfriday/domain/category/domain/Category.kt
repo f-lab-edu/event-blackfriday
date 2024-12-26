@@ -31,6 +31,9 @@ class Category(
     @Column(nullable = false)
     var depth: Int = 1,
 
+    @Column(name = "member_id", nullable = false)
+    val memberId: Long,
+
     @Column(nullable = false)
     var displayOrder: Int = 1,
 

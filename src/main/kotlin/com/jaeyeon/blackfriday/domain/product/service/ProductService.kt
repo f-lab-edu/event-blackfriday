@@ -25,10 +25,11 @@ class ProductService(
     private val categoryRepository: CategoryRepository,
 ) {
 
-    fun createProduct(request: CreateProductRequest): ProductDetailResponse {
+    fun createProduct(memberId: Long, request: CreateProductRequest): ProductDetailResponse {
         val category = findCategoryById(request.categoryId)
 
         val product = Product(
+            memberId = memberId,
             name = request.name,
             description = request.description,
             price = request.price,
@@ -39,8 +40,10 @@ class ProductService(
         return ProductDetailResponse.from(productRepository.save(product))
     }
 
-    fun updateProduct(id: Long, request: UpdateProductRequest): ProductDetailResponse {
+    fun updateProduct(memberId: Long, id: Long, request: UpdateProductRequest): ProductDetailResponse {
         val product = findProductById(id)
+        validateProductOwnership(product, memberId)
+
         val category = request.categoryId?.let { findCategoryById(it) }
 
         product.update(
@@ -53,19 +56,22 @@ class ProductService(
         return ProductDetailResponse.from(product)
     }
 
-    fun deleteProduct(id: Long) {
+    fun deleteProduct(memberId: Long, id: Long) {
         val product = findProductById(id)
+        validateProductOwnership(product, memberId)
         product.isDeleted = true
     }
 
-    fun increaseStockQuantity(id: Long, request: StockRequest): ProductStockResponse {
+    fun increaseStockQuantity(memberId: Long, id: Long, request: StockRequest): ProductStockResponse {
         val product = findProductById(id)
+        validateProductOwnership(product, memberId)
         product.increaseStockQuantity(request.amount)
         return ProductStockResponse.from(product)
     }
 
-    fun decreaseStockQuantity(id: Long, request: StockRequest): ProductStockResponse {
+    fun decreaseStockQuantity(memberId: Long, id: Long, request: StockRequest): ProductStockResponse {
         val product = findProductById(id)
+        validateProductOwnership(product, memberId)
         product.decreaseStockQuantity(request.amount)
         return ProductStockResponse.from(product)
     }
@@ -102,5 +108,11 @@ class ProductService(
     private fun findCategoryById(id: Long): Category {
         return categoryRepository.findByIdOrNull(id)
             ?: throw CategoryException.invalidNotFound()
+    }
+
+    private fun validateProductOwnership(product: Product, memberId: Long) {
+        if (product.memberId != memberId) {
+            throw ProductException.notOwner()
+        }
     }
 }

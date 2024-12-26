@@ -1,5 +1,7 @@
 package com.jaeyeon.blackfriday.domain.category.controller
 
+import com.jaeyeon.blackfriday.common.security.annotation.CurrentUser
+import com.jaeyeon.blackfriday.common.security.annotation.LoginRequired
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryTreeResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CreateCategoryRequest
@@ -38,8 +40,12 @@ class CategoryController(
         ],
     )
     @PostMapping
-    fun createCategory(@Valid @RequestBody request: CreateCategoryRequest): CategoryResponse {
-        return categoryService.createCategory(request)
+    @LoginRequired
+    fun createCategory(
+        @CurrentUser memberId: Long,
+        @Valid @RequestBody request: CreateCategoryRequest,
+    ): CategoryResponse {
+        return categoryService.createCategory(memberId, request)
     }
 
     @Operation(summary = "카테고리 수정", description = "기존 카테고리 정보를 수정합니다.")
@@ -51,11 +57,13 @@ class CategoryController(
         ],
     )
     @PutMapping("/{id}")
+    @LoginRequired
     fun updateCategory(
+        @CurrentUser memberId: Long,
         @Parameter(description = "카테고리 ID") @PathVariable id: Long,
         @Valid @RequestBody request: UpdateCategoryRequest,
     ): CategoryResponse {
-        return categoryService.updateCategory(id, request)
+        return categoryService.updateCategory(memberId, id, request)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -67,8 +75,12 @@ class CategoryController(
         ],
     )
     @DeleteMapping("/{id}")
-    fun deleteCategory(@Parameter(description = "카테고리 ID") @PathVariable id: Long) {
-        categoryService.deleteCategory(id)
+    @LoginRequired
+    fun deleteCategory(
+        @CurrentUser memberId: Long,
+        @Parameter(description = "카테고리 ID") @PathVariable id: Long,
+    ) {
+        categoryService.deleteCategory(memberId, id)
     }
 
     @Operation(summary = "전체 카테고리 조회", description = "모든 카테고리를 조회합니다.")
@@ -87,9 +99,10 @@ class CategoryController(
     )
     @GetMapping("/{id}/sub-categories")
     fun getSubCategories(
+        @CurrentUser memberId: Long,
         @Parameter(description = "카테고리 ID") @PathVariable id: Long,
     ): List<CategoryResponse> {
-        return categoryService.getDirectChildCategories(id)
+        return categoryService.getDirectChildCategories(memberId, id)
     }
 
     @Operation(summary = "카테고리 트리 조회", description = "전체 카테고리를 트리 구조로 조회합니다.")
