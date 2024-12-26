@@ -1,0 +1,47 @@
+### 1. 주문 생성
+POST http://localhost:8080/api/v1/orders
+Content-Type: application/json
+X-Auth-Token: {{auth_token}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "productName": "맥북",
+      "quantity": 1,
+      "price": 10000
+    }
+  ]
+}
+
+> {%
+    client.global.set("orderNumber", response.body.orderNumber)
+%}
+
+### 2. 주문 상태 변경 (WAITING -> PENDING)
+PATCH http://localhost:8080/api/v1/orders/{{orderNumber}}/status?status=PENDING
+X-Auth-Token: {{auth_token}}
+
+### 3. 주문 상태 변경 (PENDING -> IN_PROGRESS)
+PATCH http://localhost:8080/api/v1/orders/{{orderNumber}}/status?status=IN_PROGRESS
+X-Auth-Token: {{auth_token}}
+
+### 4. 주문 상태 변경 (IN_PROGRESS -> READY_FOR_PAYMENT)
+PATCH http://localhost:8080/api/v1/orders/{{orderNumber}}/status?status=READY_FOR_PAYMENT
+X-Auth-Token: {{auth_token}}
+
+### 5. 주문 목록 조회 (전체)
+GET http://localhost:8080/api/v1/orders?page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 6. 주문 목록 조회 (상태별)
+GET http://localhost:8080/api/v1/orders?status=READY_FOR_PAYMENT&page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 7. 단일 주문 조회
+GET http://localhost:8080/api/v1/orders/{{orderNumber}}
+X-Auth-Token: {{auth_token}}
+
+### 8. 주문 취소
+DELETE http://localhost:8080/api/v1/orders/{{orderNumber}}
+X-Auth-Token: {{auth_token}}
