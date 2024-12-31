@@ -32,78 +32,78 @@ class OrderService(
 
     fun createOrder(memberId: Long, request: CreateOrderRequest): OrderResponse {
         log.info { "Creating order for member: $memberId with items: ${request.items.size}" }
-
-        val orderNumber = orderNumberGenerator.generate()
-
+        validateProductPrice(request.items)
         validateAndDecreaseStocks(memberId, request.items)
 
         val order = Order(
-            orderNumber = orderNumber,
+            orderNumber = orderNumberGenerator.generate(),
             memberId = memberId,
             totalAmount = calculateTotalAmount(request.items),
             status = OrderStatus.WAITING,
-        )
-        val savedOrder = orderRepository.save(order)
-        log.debug { "Order saved with number: ${savedOrder.orderNumber}" }
+        ).also { it.readyForPayment() }
+            .let { orderRepository.save(it) }
+
+        log.debug { "Order saved with number: ${order.orderNumber}" }
 
         val orderItems = request.items.map { item ->
             OrderItem(
-                orderId = savedOrder.id!!,
+                orderId = order.id!!,
                 productId = item.productId,
                 quantity = item.quantity,
                 productName = item.productName,
                 price = item.price,
             )
-        }
-        val savedOrderItems = orderItemRepository.saveAll(orderItems)
-        log.debug { "Saved ${savedOrderItems.size} order items" }
+        }.let { orderItemRepository.saveAll(it) }
 
-        log.info { "Order created successfully with number: ${savedOrder.orderNumber}" }
-        return OrderResponse.of(savedOrder, savedOrderItems)
-    }
-
-    fun cancelOrder(memberId: Long, orderNumber: String): OrderResponse {
-        log.info { "Cancelling order: $orderNumber for member: $memberId" }
-
-        val order = findOrderByOrderNumber(orderNumber)
-        validateOrderOwnership(order, memberId)
-
-        order.cancel()
-
-        val orderItems = findAndSoftDeleteOrderItems(order.id!!)
-
-        restoreStocks(memberId, orderItems)
-
-        log.info { "Order cancelled successfully: $orderNumber" }
+        log.info { "Order created successfully with number: ${order.orderNumber}" }
         return OrderResponse.of(order, orderItems)
     }
 
-    fun changeOrderStatus(memberId: Long, orderNumber: String, newStatus: OrderStatus): OrderResponse {
-        log.info { "Changing order status: $orderNumber for member: $memberId to status: $newStatus" }
+    fun completePayment(memberId: Long, orderNumber: String): OrderResponse {
+        log.info { "Completing payment for order: $orderNumber" }
 
         val order = findOrderByOrderNumber(orderNumber)
-        validateOrderOwnership(order, memberId)
-
-        order.changeStatus(newStatus)
+            .also { validateOrderOwnership(it, memberId) }
+            .also {
+                if (!it.isPendingPayment()) {
+                    throw OrderException.invalidStatusTransition()
+                }
+            }
+            .also { it.completePay() }
 
         val orderItems = orderItemRepository.findByOrderId(order.id!!)
 
-        log.info { "Order status changed successfully: $orderNumber to $newStatus" }
+        log.info { "Payment completed for order: $orderNumber" }
+        return OrderResponse.of(order, orderItems)
+    }
+
+    fun cancelOrder(memberId: Long, orderNumber: String): OrderResponse {
+        log.info { "Cancelling order: $orderNumber" }
+
+        val order = findOrderByOrderNumber(orderNumber)
+            .also { validateOrderOwnership(it, memberId) }
+            .also {
+                if (it.isPaid()) {
+                    throw OrderException.invalidStatusTransition()
+                }
+            }
+            .also { it.cancel() }
+
+        val orderItems = findAndSoftDeleteOrderItems(order.id!!)
+        restoreStocks(memberId, orderItems)
+
+        log.info { "Order cancelled: $orderNumber" }
         return OrderResponse.of(order, orderItems)
     }
 
     @Transactional(readOnly = true)
     fun getOrder(memberId: Long, orderNumber: String): OrderResponse {
-        log.info { "Fetching order details: $orderNumber for member: $memberId" }
+        log.info { "Fetching order: $orderNumber" }
 
         val order = findOrderByOrderNumber(orderNumber)
-        validateOrderOwnership(order, memberId)
+            .also { validateOrderOwnership(it, memberId) }
 
-        val orderItems = order.id?.let { orderId ->
-            orderItemRepository.findByOrderId(orderId)
-        } ?: throw OrderException.orderNotFound()
-
-        log.debug { "Found order with ${orderItems.size} items" }
+        val orderItems = orderItemRepository.findByOrderId(order.id!!)
 
         return OrderResponse.of(order, orderItems)
     }
@@ -111,19 +111,38 @@ class OrderService(
     @Transactional(readOnly = true)
     fun getOrders(memberId: Long, status: OrderStatus?, pageable: Pageable): Page<OrderSummaryResponse> {
         log.info { "Fetching orders for member: $memberId with status: ${status ?: "ALL"}" }
-
-        val orders = orderRepository.findOrders(memberId, status, pageable)
+        return orderRepository.findOrders(memberId, status, pageable)
             .map(OrderSummaryResponse::from)
-
-        log.debug { "Found ${orders.totalElements} orders for member: $memberId" }
-        return orders
     }
 
     @Transactional(readOnly = true)
     fun getOrderAmount(memberId: Long, orderNumber: String): BigDecimal {
-        val order = findOrderByOrderNumber(orderNumber)
-        validateOrderOwnership(order, memberId)
-        return order.totalAmount
+        return findOrderByOrderNumber(orderNumber)
+            .also { validateOrderOwnership(it, memberId) }
+            .totalAmount
+    }
+
+    @Transactional(readOnly = true)
+    fun isOrderPendingPayment(memberId: Long, orderNumber: String): Boolean {
+        return findOrderByOrderNumber(orderNumber)
+            .also { validateOrderOwnership(it, memberId) }
+            .isPendingPayment()
+    }
+
+    @Transactional(readOnly = true)
+    fun isOrderPaid(memberId: Long, orderNumber: String): Boolean {
+        return findOrderByOrderNumber(orderNumber)
+            .also { validateOrderOwnership(it, memberId) }
+            .isPaid()
+    }
+
+    private fun validateProductPrice(items: List<CreateOrderItemRequest>) {
+        items.forEach { item ->
+            val product = productService.getProduct(item.productId)
+            if (product.price.compareTo(item.price) != 0) {
+                throw OrderException.invalidProductPrice()
+            }
+        }
     }
 
     private fun validateAndDecreaseStocks(memberId: Long, items: List<CreateOrderItemRequest>) {

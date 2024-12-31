@@ -6,12 +6,13 @@ import com.jaeyeon.blackfriday.domain.order.domain.enum.OrderStatus
 import java.math.BigDecimal
 
 object OrderFixture {
+    private val orderNumberGenerator = TestOrderNumberGenerator()
+
     private object DefaultValues {
         const val ID = 1L
-        const val ORDER_NUMBER = "ORDER-001"
         const val MEMBER_ID = 1L
         val TOTAL_AMOUNT = BigDecimal("10000")
-        val STATUS = OrderStatus.PENDING
+        val STATUS = OrderStatus.WAITING
 
         const val PRODUCT_ID = 1L
         const val PRODUCT_NAME = "맥북"
@@ -21,7 +22,7 @@ object OrderFixture {
 
     fun createOrder(
         id: Long = DefaultValues.ID,
-        orderNumber: String = DefaultValues.ORDER_NUMBER,
+        orderNumber: String = orderNumberGenerator.generate(),
         memberId: Long = DefaultValues.MEMBER_ID,
         status: OrderStatus = DefaultValues.STATUS,
         totalAmount: BigDecimal = DefaultValues.TOTAL_AMOUNT,
@@ -31,6 +32,14 @@ object OrderFixture {
         memberId = memberId,
         totalAmount = totalAmount,
         status = status,
+    )
+
+    fun createPendingPaymentOrder() = createOrder(
+        status = OrderStatus.PENDING_PAYMENT,
+    )
+
+    fun createPaidOrder() = createOrder(
+        status = OrderStatus.PAID,
     )
 
     fun createOrderItem(

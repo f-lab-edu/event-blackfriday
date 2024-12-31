@@ -4,9 +4,9 @@ Content-Type: application/json
 X-Auth-Token: {{auth_token}}
 
 {
-  "name": "테스트 상품",
+  "name": "맥북",
   "description": "상품 상세 설명",
-  "price": 100000,
+  "price": 10000,
   "stockQuantity": 100,
   "categoryId": 1
 }

@@ -33,7 +33,7 @@ class Order(
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    var status: OrderStatus = OrderStatus.PENDING,
+    var status: OrderStatus = OrderStatus.WAITING,
 
     @Column(nullable = false)
     var totalAmount: BigDecimal,
@@ -61,17 +61,24 @@ class Order(
     }
 
     fun cancel() {
-        validateCancellableStatus()
+        validateCancellable()
         status = OrderStatus.CANCELLED
         statusUpdatedAt = LocalDateTime.now()
         isDeleted = true
     }
 
-    fun changeStatus(newStatus: OrderStatus) {
-        validateStatusTransition(newStatus)
-        status = newStatus
+    fun readyForPayment() {
+        validatePaymentReady()
+        status = OrderStatus.PENDING_PAYMENT
         statusUpdatedAt = LocalDateTime.now()
-        updateTimeoutAt(newStatus)
+        updateTimeoutAt()
+    }
+
+    fun completePay() {
+        validatePaymentPending()
+        status = OrderStatus.PAID
+        statusUpdatedAt = LocalDateTime.now()
+        timeoutAt = null
     }
 
     private fun validateTotalAmount() {
@@ -86,33 +93,31 @@ class Order(
         }
     }
 
-    private fun validateCancellableStatus() {
-        if (status == OrderStatus.CANCELLED) {
+    private fun validateCancellable() {
+        if (status == OrderStatus.CANCELLED || status == OrderStatus.PAID) {
             throw OrderException.invalidCancelStatus()
         }
     }
 
-    private fun validateStatusTransition(newStatus: OrderStatus) {
-        val validTransitions = when (status) {
-            OrderStatus.WAITING -> setOf(OrderStatus.PENDING, OrderStatus.CANCELLED)
-            OrderStatus.PENDING -> setOf(OrderStatus.IN_PROGRESS, OrderStatus.CANCELLED)
-            OrderStatus.IN_PROGRESS -> setOf(OrderStatus.READY_FOR_PAYMENT, OrderStatus.CANCELLED)
-            OrderStatus.READY_FOR_PAYMENT -> setOf(OrderStatus.CANCELLED)
-            OrderStatus.CANCELLED -> emptySet()
-        }
-
-        if (newStatus !in validTransitions) {
+    private fun validatePaymentReady() {
+        if (status != OrderStatus.WAITING) {
             throw OrderException.invalidStatusTransition()
         }
     }
 
-    private fun updateTimeoutAt(status: OrderStatus) {
-        timeoutAt = when (status) {
-            OrderStatus.WAITING -> LocalDateTime.now().plusMinutes(10)
-            OrderStatus.PENDING -> LocalDateTime.now().plusMinutes(10)
-            OrderStatus.IN_PROGRESS -> LocalDateTime.now().plusMinutes(15)
-            OrderStatus.READY_FOR_PAYMENT -> LocalDateTime.now().plusMinutes(3)
-            OrderStatus.CANCELLED -> null
+    private fun validatePaymentPending() {
+        if (status != OrderStatus.PENDING_PAYMENT) {
+            throw OrderException.invalidStatusTransition()
         }
     }
+
+    private fun updateTimeoutAt() {
+        timeoutAt = when (status) {
+            OrderStatus.PENDING_PAYMENT -> LocalDateTime.now().plusMinutes(30)
+            else -> null
+        }
+    }
+
+    fun isPendingPayment() = status == OrderStatus.PENDING_PAYMENT
+    fun isPaid() = status == OrderStatus.PAID
 }

@@ -81,6 +81,7 @@ class OrderException(
         fun invalidOrderStatus() = OrderException(ErrorCode.INVALID_ORDER_STATUS)
         fun invalidProductName() = OrderException(ErrorCode.INVALID_PRODUCT_NAME)
         fun notOwner() = OrderException(ErrorCode.ORDER_NOT_OWNER)
+        fun invalidProductPrice() = OrderException(ErrorCode.INVALID_PRODUCT_PRICE)
     }
 }
 

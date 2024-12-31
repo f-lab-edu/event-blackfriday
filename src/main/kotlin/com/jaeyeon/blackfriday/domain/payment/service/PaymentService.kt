@@ -27,36 +27,27 @@ class PaymentService(
     fun processPayment(memberId: Long, request: PaymentRequest): PaymentResponse {
         log.info { "Processing payment for order: ${request.orderNumber}" }
 
-        val payment = createPayment(memberId, request)
         val orderAmount = orderService.getOrderAmount(memberId, request.orderNumber)
+        val payment = createPayment(memberId, request)
+            .also { it.validateAmount(orderAmount) }
+            .also { it.complete() }
+            .let { paymentRepository.save(it) }
 
-        payment.validateAmount(orderAmount)
-        val savedPayment = paymentRepository.save(payment)
+        log.info { "Payment processed successfully: ${payment.paymentNumber}" }
 
-        log.info { "Payment processed successfully: ${savedPayment.paymentNumber}" }
-        return PaymentResponse.from(savedPayment)
-    }
+        orderService.completePayment(memberId, request.orderNumber)
 
-    fun cancelPayment(memberId: Long, paymentNumber: String): PaymentResponse {
-        log.info { "Cancelling payment: $paymentNumber" }
-
-        val payment = findPaymentByNumber(paymentNumber)
-            .also { it.validateOwnership(memberId) }
-            .cancel()
-
-        log.info { "Payment cancelled successfully: $paymentNumber" }
         return PaymentResponse.from(payment)
     }
+
+    fun cancelPayment(memberId: Long, paymentNumber: String): PaymentResponse =
+        updatePaymentStatus(memberId, paymentNumber) { it.cancel() }
 
     @Transactional(readOnly = true)
-    fun getPayment(memberId: Long, paymentNumber: String): PaymentResponse {
-        log.info { "Fetching payment: $paymentNumber" }
-
-        val payment = findPaymentByNumber(paymentNumber)
+    fun getPayment(memberId: Long, paymentNumber: String): PaymentResponse =
+        findPaymentByNumber(paymentNumber)
             .also { it.validateOwnership(memberId) }
-
-        return PaymentResponse.from(payment)
-    }
+            .let(PaymentResponse::from)
 
     @Transactional(readOnly = true)
     fun getPayments(
@@ -68,6 +59,27 @@ class PaymentService(
 
         return paymentRepository.findPayments(memberId, status, pageable)
             .map(PaymentResponse::from)
+    }
+
+    fun failPayment(memberId: Long, paymentNumber: String): PaymentResponse =
+        updatePaymentStatus(memberId, paymentNumber) { it.fail() }
+
+    fun refundPayment(memberId: Long, paymentNumber: String): PaymentResponse =
+        updatePaymentStatus(memberId, paymentNumber) { it.refund() }
+
+    private fun updatePaymentStatus(
+        memberId: Long,
+        paymentNumber: String,
+        operation: (Payment) -> Payment,
+    ): PaymentResponse {
+        log.info { "Updating payment status: $paymentNumber" }
+
+        val payment = findPaymentByNumber(paymentNumber)
+            .also { it.validateOwnership(memberId) }
+            .let(operation)
+
+        log.info { "Payment status updated to ${payment.status}: $paymentNumber" }
+        return PaymentResponse.from(payment)
     }
 
     private fun createPayment(memberId: Long, request: PaymentRequest) = Payment(

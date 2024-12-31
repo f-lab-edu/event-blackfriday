@@ -47,7 +47,7 @@ class Payment(
 ) : BaseTimeEntity() {
 
     fun validateAmount(orderAmount: BigDecimal) {
-        if (this.amount != orderAmount) {
+        if (this.amount.compareTo(orderAmount) != 0) {
             throw PaymentException.invalidPaymentAmount()
         }
     }
@@ -56,6 +56,12 @@ class Payment(
         if (!isOwnedBy(memberId)) {
             throw PaymentException.notPaymentOwner()
         }
+    }
+
+    fun complete() = apply {
+        validatePending()
+        status = PaymentStatus.COMPLETED
+        statusUpdatedAt = LocalDateTime.now()
     }
 
     fun cancel() = apply {
