@@ -61,6 +61,8 @@ class MemberException(
         fun unauthorized() = MemberException(ErrorCode.UNAUTHORIZED)
         fun notSubscribed() = MemberException(ErrorCode.NOT_SUBSCRIBED)
         fun expiredPrimeMembership() = MemberException(ErrorCode.EXPIRED_PRIME_MEMBERSHIP)
+        fun alreadySeller() = MemberException(ErrorCode.ALREADY_SELLER)
+        fun notSeller() = MemberException(ErrorCode.NOT_SELLER)
     }
 }
 

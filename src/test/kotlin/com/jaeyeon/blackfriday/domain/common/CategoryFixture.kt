@@ -1,42 +1,32 @@
 package com.jaeyeon.blackfriday.domain.common
 
-import com.appmattus.kotlinfixture.kotlinFixture
 import com.jaeyeon.blackfriday.domain.category.domain.Category
 import com.jaeyeon.blackfriday.domain.category.domain.CategoryClosure
 
 object CategoryFixture {
-    private val fixture = kotlinFixture {
-        factory<Category> {
-            Category(
-                id = 1L,
-                memberId = 1L,
-                name = "테스트 카테고리",
-                depth = 1,
-                displayOrder = 1,
-                isDeleted = false,
-            )
-        }
+    private object DefaultValues {
+        const val ID = 1L
+        const val SELLER_ID = 1L
+        const val NAME = "테스트 카테고리"
+        const val DEPTH = 1
+        const val DISPLAY_ORDER = 1
+        const val IS_DELETED = false
 
-        factory<CategoryClosure> {
-            CategoryClosure(
-                id = 1L,
-                ancestor = createCategory(),
-                descendant = createCategory(id = 2L),
-                depth = 1,
-            )
-        }
+        const val CLOSURE_ID = 1L
+        const val DESCENDANT_ID = 2L
+        const val CLOSURE_DEPTH = 1
     }
 
     fun createCategory(
-        id: Long = 1L,
-        memberId: Long = 1L,
-        name: String = "테스트 카테고리",
-        depth: Int = 1,
-        displayOrder: Int = 1,
-        isDeleted: Boolean = false,
+        id: Long = DefaultValues.ID,
+        sellerId: Long = DefaultValues.SELLER_ID,
+        name: String = DefaultValues.NAME,
+        depth: Int = DefaultValues.DEPTH,
+        displayOrder: Int = DefaultValues.DISPLAY_ORDER,
+        isDeleted: Boolean = DefaultValues.IS_DELETED,
     ) = Category(
         id = id,
-        memberId = memberId,
+        sellerId = sellerId,
         name = name,
         depth = depth,
         displayOrder = displayOrder,
@@ -44,10 +34,10 @@ object CategoryFixture {
     )
 
     fun createCategoryClosure(
-        id: Long = 1L,
+        id: Long = DefaultValues.CLOSURE_ID,
         ancestor: Category = createCategory(),
-        descendant: Category = createCategory(id = 2L),
-        depth: Int = 1,
+        descendant: Category = createCategory(id = DefaultValues.DESCENDANT_ID),
+        depth: Int = DefaultValues.CLOSURE_DEPTH,
     ) = CategoryClosure(
         id = id,
         ancestor = ancestor,

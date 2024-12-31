@@ -99,7 +99,10 @@ class OrderService(
         val order = findOrderByOrderNumber(orderNumber)
         validateOrderOwnership(order, memberId)
 
-        val orderItems = orderItemRepository.findByOrderId(order.id!!)
+        val orderItems = order.id?.let { orderId ->
+            orderItemRepository.findByOrderId(orderId)
+        } ?: throw OrderException.orderNotFound()
+
         log.debug { "Found order with ${orderItems.size} items" }
 
         return OrderResponse.of(order, orderItems)

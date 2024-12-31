@@ -80,4 +80,16 @@ class MemberService(
         memberRepository.save(member)
         httpSession.invalidate()
     }
+
+    fun upgradeToSeller(memberId: Long): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
+        member.upgradeToSeller()
+        val savedMember = memberRepository.save(member)
+
+        httpSession.setAttribute(USER_KEY, SessionUser.from(savedMember))
+
+        return MemberResponse.from(savedMember)
+    }
 }

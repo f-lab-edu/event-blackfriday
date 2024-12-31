@@ -38,6 +38,8 @@ enum class ErrorCode(
     ALREADY_WITHDRAWN(HttpStatus.BAD_REQUEST, "MEMBER-007", "이미 탈퇴한 회원입니다."),
     NOT_SUBSCRIBED(HttpStatus.BAD_REQUEST, "MEMBER-008", "구독 중이 아닌 회원입니다."),
     EXPIRED_PRIME_MEMBERSHIP(HttpStatus.BAD_REQUEST, "MEMBER-009", "만료된 프라임 멤버십입니다."),
+    ALREADY_SELLER(HttpStatus.BAD_REQUEST, "MEMBER-010", "이미 판매자 회원입니다."),
+    NOT_SELLER(HttpStatus.BAD_REQUEST, "MEMBER-011", "판매자 권한이 없습니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH-001", "인증이 필요합니다."),
 

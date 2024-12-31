@@ -1,31 +1,26 @@
 package com.jaeyeon.blackfriday.domain.common
 
-import com.appmattus.kotlinfixture.kotlinFixture
 import com.jaeyeon.blackfriday.domain.payment.domain.Payment
 import com.jaeyeon.blackfriday.domain.payment.domain.enum.PaymentStatus
 import java.math.BigDecimal
 
 object PaymentFixture {
-    private val fixture = kotlinFixture {
-        factory<Payment> {
-            Payment(
-                id = 1L,
-                paymentNumber = "PAYMENT-001",
-                orderNumber = "ORDER-001",
-                memberId = 1L,
-                amount = BigDecimal("10000"),
-                status = PaymentStatus.PENDING,
-            )
-        }
+    private object DefaultValues {
+        const val ID = 1L
+        const val PAYMENT_NUMBER = "PAYMENT-001"
+        const val ORDER_NUMBER = "ORDER-001"
+        const val MEMBER_ID = 1L
+        val AMOUNT = BigDecimal("10000")
+        val STATUS = PaymentStatus.PENDING
     }
 
     fun createPayment(
-        id: Long = 1L,
-        paymentNumber: String = fixture(),
-        orderNumber: String = "ORDER-001",
-        memberId: Long = 1L,
-        amount: BigDecimal = BigDecimal("10000"),
-        status: PaymentStatus = PaymentStatus.PENDING,
+        id: Long = DefaultValues.ID,
+        paymentNumber: String = DefaultValues.PAYMENT_NUMBER,
+        orderNumber: String = DefaultValues.ORDER_NUMBER,
+        memberId: Long = DefaultValues.MEMBER_ID,
+        amount: BigDecimal = DefaultValues.AMOUNT,
+        status: PaymentStatus = DefaultValues.STATUS,
     ) = Payment(
         id = id,
         paymentNumber = paymentNumber,

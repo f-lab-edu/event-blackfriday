@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 class Order(
 
     @Id
-    @Column(name = "order_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 

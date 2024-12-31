@@ -6,6 +6,8 @@ import com.jaeyeon.blackfriday.domain.category.dto.UpdateCategoryRequest
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryClosureRepository
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryRepository
 import com.jaeyeon.blackfriday.domain.common.CategoryFixture
+import com.jaeyeon.blackfriday.domain.common.MemberFixture
+import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -21,10 +23,11 @@ import org.springframework.data.repository.findByIdOrNull
 class CategoryServiceTest : BehaviorSpec({
     val categoryRepository = mockk<CategoryRepository>()
     val categoryClosureRepository = mockk<CategoryClosureRepository>()
-    val categoryService = CategoryService(categoryRepository, categoryClosureRepository)
+    val memberRepository = mockk<MemberRepository>()
+    val categoryService = CategoryService(categoryRepository, categoryClosureRepository, memberRepository)
 
     Given("카테고리 생성 시") {
-        val memberId = 1L
+        val sellerId = 1L
         val request = CreateCategoryRequest(
             name = "전자제품",
             depth = 1,
@@ -32,18 +35,21 @@ class CategoryServiceTest : BehaviorSpec({
         )
         val category = CategoryFixture.createCategory(
             id = 1L,
-            memberId = memberId,
+            sellerId = sellerId,
             name = request.name,
             depth = request.depth,
             displayOrder = request.displayOrder,
         )
 
         When("루트 카테고리 생성 요청이면") {
+            val seller = MemberFixture.createSeller(id = sellerId)
+
+            every { memberRepository.findByIdOrNull(sellerId) } returns seller
             every { categoryRepository.existsByNameAndDepth(request.name, request.depth) } returns false
             every { categoryRepository.save(any()) } returns category
             every { categoryClosureRepository.saveAll(any<List<CategoryClosure>>()) } returns mockk()
 
-            val result = categoryService.createCategory(memberId, request)
+            val result = categoryService.createCategory(sellerId, request)
 
             Then("카테고리가 정상적으로 생성된다") {
                 result.id shouldBe category.id
@@ -60,21 +66,21 @@ class CategoryServiceTest : BehaviorSpec({
         }
 
         When("이미 존재하는 카테고리명이면") {
-            every { categoryRepository.existsByNameAndDepth(any(), any()) } returns true
+            every { categoryRepository.existsByNameAndDepth(request.name, request.depth) } returns true
 
             Then("중복 예외가 발생한다") {
                 shouldThrow<CategoryException> {
-                    categoryService.createCategory(memberId, request)
+                    categoryService.createCategory(sellerId, request)
                 }
             }
         }
     }
 
     Given("하위 카테고리 생성 시") {
-        val memberId = 1L
+        val sellerId = 1L
         val parentCategory = CategoryFixture.createCategory(
             id = 1L,
-            memberId = memberId,
+            sellerId = sellerId,
             name = "전자제품",
             depth = 1,
         )
@@ -86,7 +92,7 @@ class CategoryServiceTest : BehaviorSpec({
         )
         val childCategory = CategoryFixture.createCategory(
             id = 2L,
-            memberId = memberId,
+            sellerId = sellerId,
             name = request.name,
             depth = request.depth,
             displayOrder = request.displayOrder,
@@ -104,7 +110,7 @@ class CategoryServiceTest : BehaviorSpec({
             )
             every { categoryClosureRepository.saveAll(any<List<CategoryClosure>>()) } returns mockk()
 
-            val result = categoryService.createCategory(memberId, request)
+            val result = categoryService.createCategory(sellerId, request)
 
             Then("하위 카테고리가 정상적으로 생성된다") {
                 result.id shouldBe childCategory.id
@@ -116,8 +122,8 @@ class CategoryServiceTest : BehaviorSpec({
     }
 
     Given("카테고리 수정 시") {
-        val memberId = 1L
-        val category = CategoryFixture.createCategory(memberId = memberId)
+        val sellerId = 1L
+        val category = CategoryFixture.createCategory(sellerId = sellerId)
         val request = UpdateCategoryRequest(
             name = "디지털기기",
             displayOrder = 2,
@@ -126,7 +132,7 @@ class CategoryServiceTest : BehaviorSpec({
         When("존재하는 카테고리면") {
             every { categoryRepository.findByIdOrNull(category.id!!) } returns category
 
-            val result = categoryService.updateCategory(memberId, category.id!!, request)
+            val result = categoryService.updateCategory(sellerId, category.id!!, request)
 
             Then("카테고리가 정상적으로 수정된다") {
                 result.name shouldBe request.name
@@ -135,12 +141,12 @@ class CategoryServiceTest : BehaviorSpec({
         }
 
         When("다른 사용자가 수정을 시도하면") {
-            val otherMemberId = 2L
+            val otherSellerId = 2L
             every { categoryRepository.findByIdOrNull(category.id!!) } returns category
 
             Then("권한 없음 예외가 발생한다") {
                 shouldThrow<CategoryException> {
-                    categoryService.updateCategory(otherMemberId, category.id!!, request)
+                    categoryService.updateCategory(otherSellerId, category.id!!, request)
                 }
             }
         }

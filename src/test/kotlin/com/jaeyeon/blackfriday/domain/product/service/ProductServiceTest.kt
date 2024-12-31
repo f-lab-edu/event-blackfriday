@@ -3,7 +3,9 @@ package com.jaeyeon.blackfriday.domain.product.service
 import com.jaeyeon.blackfriday.common.global.ProductException
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryRepository
 import com.jaeyeon.blackfriday.domain.common.CategoryFixture
+import com.jaeyeon.blackfriday.domain.common.MemberFixture
 import com.jaeyeon.blackfriday.domain.common.ProductFixture
+import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import com.jaeyeon.blackfriday.domain.product.domain.enum.ProductStatus
 import com.jaeyeon.blackfriday.domain.product.dto.CreateProductRequest
 import com.jaeyeon.blackfriday.domain.product.dto.StockRequest
@@ -26,11 +28,14 @@ import java.math.BigDecimal
 class ProductServiceTest : BehaviorSpec({
     val productRepository = mockk<ProductRepository>()
     val categoryRepository = mockk<CategoryRepository>()
-    val productService = ProductService(productRepository, categoryRepository)
+    val memberRepository = mockk<MemberRepository>()
+    val productService = ProductService(productRepository, categoryRepository, memberRepository)
 
     Given("상품 생성 시") {
         val memberId = 1L
         val category = CategoryFixture.createCategory()
+        val seller = MemberFixture.createSeller(id = memberId)
+
         val request = CreateProductRequest(
             name = "테스트 상품",
             description = "테스트 상품 설명",
@@ -39,11 +44,12 @@ class ProductServiceTest : BehaviorSpec({
             categoryId = category.id!!,
         )
         val product = ProductFixture.createProduct(
-            memberId = memberId,
+            sellerId = memberId,
             category = category,
         )
 
         When("올바른 요청이 주어지면") {
+            every { memberRepository.findByIdOrNull(memberId) } returns seller
             every { categoryRepository.findByIdOrNull(category.id!!) } returns category
             every { productRepository.save(any()) } returns product
 
@@ -58,6 +64,7 @@ class ProductServiceTest : BehaviorSpec({
                 result.categoryName shouldBe category.name
 
                 verify(exactly = 1) {
+                    memberRepository.findByIdOrNull(memberId)
                     categoryRepository.findByIdOrNull(category.id!!)
                     productRepository.save(any())
                 }
@@ -67,7 +74,7 @@ class ProductServiceTest : BehaviorSpec({
 
     Given("재고 감소 시") {
         val memberId = 1L
-        val product = ProductFixture.createProduct(memberId = memberId)
+        val product = ProductFixture.createProduct(sellerId = memberId)
 
         When("충분한 재고가 있는 경우") {
             val request = StockRequest(amount = 10)
@@ -107,7 +114,7 @@ class ProductServiceTest : BehaviorSpec({
 
     Given("재고 증가 시") {
         val memberId = 1L
-        val product = ProductFixture.createProduct(memberId = memberId)
+        val product = ProductFixture.createProduct(sellerId = memberId)
 
         When("정상적인 수량을 요청한 경우") {
             val request = StockRequest(amount = 50)

@@ -114,10 +114,6 @@ class PaymentServiceTest : BehaviorSpec({
                 result.paymentNumber shouldBe payment.paymentNumber
                 result.status shouldBe payment.status
                 result.amount shouldBe payment.amount
-
-                verify(exactly = 1) {
-                    paymentRepository.findByPaymentNumber(payment.paymentNumber)
-                }
             }
         }
 

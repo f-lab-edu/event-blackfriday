@@ -1,40 +1,30 @@
 package com.jaeyeon.blackfriday.domain.common
 
-import com.appmattus.kotlinfixture.kotlinFixture
 import com.jaeyeon.blackfriday.domain.order.domain.Order
 import com.jaeyeon.blackfriday.domain.order.domain.OrderItem
 import com.jaeyeon.blackfriday.domain.order.domain.enum.OrderStatus
 import java.math.BigDecimal
 
 object OrderFixture {
-    private val fixture = kotlinFixture {
-        factory<Order> {
-            Order(
-                id = 1L,
-                orderNumber = "ORDER-001",
-                memberId = 1L,
-                totalAmount = BigDecimal("10000"),
-                status = OrderStatus.PENDING,
-            )
-        }
+    private object DefaultValues {
+        const val ID = 1L
+        const val ORDER_NUMBER = "ORDER-001"
+        const val MEMBER_ID = 1L
+        val TOTAL_AMOUNT = BigDecimal("10000")
+        val STATUS = OrderStatus.PENDING
 
-        factory<OrderItem> {
-            OrderItem(
-                orderId = 1L,
-                productId = 1L,
-                productName = "맥북",
-                quantity = 1,
-                price = BigDecimal("10000"),
-            )
-        }
+        const val PRODUCT_ID = 1L
+        const val PRODUCT_NAME = "맥북"
+        const val QUANTITY = 1
+        val PRICE = BigDecimal("10000")
     }
 
     fun createOrder(
-        id: Long = 1L,
-        orderNumber: String = fixture(),
-        memberId: Long = 1L,
-        status: OrderStatus = OrderStatus.PENDING,
-        totalAmount: BigDecimal = BigDecimal("10000"),
+        id: Long = DefaultValues.ID,
+        orderNumber: String = DefaultValues.ORDER_NUMBER,
+        memberId: Long = DefaultValues.MEMBER_ID,
+        status: OrderStatus = DefaultValues.STATUS,
+        totalAmount: BigDecimal = DefaultValues.TOTAL_AMOUNT,
     ) = Order(
         id = id,
         orderNumber = orderNumber,
@@ -44,11 +34,11 @@ object OrderFixture {
     )
 
     fun createOrderItem(
-        orderId: Long = 1L,
-        productId: Long = 1L,
-        productName: String = "맥북",
-        quantity: Int = 1,
-        price: BigDecimal = BigDecimal("10000"),
+        orderId: Long = DefaultValues.ID,
+        productId: Long = DefaultValues.PRODUCT_ID,
+        productName: String = DefaultValues.PRODUCT_NAME,
+        quantity: Int = DefaultValues.QUANTITY,
+        price: BigDecimal = DefaultValues.PRICE,
     ) = OrderItem(
         orderId = orderId,
         productId = productId,

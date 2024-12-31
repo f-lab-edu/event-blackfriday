@@ -1,5 +1,6 @@
 package com.jaeyeon.blackfriday.domain.payment.domain
 
+import com.jaeyeon.blackfriday.common.global.PaymentException
 import com.jaeyeon.blackfriday.common.model.BaseTimeEntity
 import com.jaeyeon.blackfriday.domain.payment.domain.enum.PaymentStatus
 import jakarta.persistence.Column
@@ -18,6 +19,7 @@ import java.time.LocalDateTime
 class Payment(
 
     @Id
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
@@ -44,18 +46,55 @@ class Payment(
     var isDeleted: Boolean = false,
 ) : BaseTimeEntity() {
 
-    fun cancel(): Payment {
+    fun validateAmount(orderAmount: BigDecimal) {
+        if (this.amount != orderAmount) {
+            throw PaymentException.invalidPaymentAmount()
+        }
+    }
+
+    fun validateOwnership(memberId: Long) {
+        if (!isOwnedBy(memberId)) {
+            throw PaymentException.notPaymentOwner()
+        }
+    }
+
+    fun cancel() = apply {
+        validateCancellable()
         status = PaymentStatus.CANCELLED
         statusUpdatedAt = LocalDateTime.now()
-        isDeleted = true
-        return this
     }
 
-    fun isOwnedBy(memberId: Long): Boolean {
-        return this.memberId == memberId
+    fun fail() = apply {
+        validatePending()
+        status = PaymentStatus.FAILED
+        statusUpdatedAt = LocalDateTime.now()
     }
 
-    fun isCancelable(): Boolean {
-        return status == PaymentStatus.PENDING
+    fun refund() = apply {
+        validateRefundable()
+        status = PaymentStatus.REFUNDED
+        statusUpdatedAt = LocalDateTime.now()
     }
+
+    private fun validateCancellable() {
+        if (!isCancellable()) {
+            throw PaymentException.invalidPaymentStatus()
+        }
+    }
+
+    private fun validatePending() {
+        if (status != PaymentStatus.PENDING) {
+            throw PaymentException.invalidPaymentStatus()
+        }
+    }
+
+    private fun validateRefundable() {
+        if (status != PaymentStatus.COMPLETED) {
+            throw PaymentException.invalidPaymentStatus()
+        }
+    }
+
+    private fun isOwnedBy(memberId: Long) = this.memberId == memberId
+
+    private fun isCancellable() = status == PaymentStatus.PENDING
 }

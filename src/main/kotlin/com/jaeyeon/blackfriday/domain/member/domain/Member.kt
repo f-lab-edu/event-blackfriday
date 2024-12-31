@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 class Member(
 
     @Id
-    @Column(name = "member_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
@@ -110,6 +110,17 @@ class Member(
         this.membershipType = MembershipType.NORMAL
         this.membershipStartDate = null
         this.membershipEndDate = null
+    }
+
+    fun upgradeToSeller() {
+        validateSellerUpgrade()
+        this.membershipType = MembershipType.SELLER
+    }
+
+    private fun validateSellerUpgrade() {
+        if (membershipType == MembershipType.SELLER) {
+            throw MemberException.alreadySeller()
+        }
     }
 
     private fun validatePrimeUpgrade() {

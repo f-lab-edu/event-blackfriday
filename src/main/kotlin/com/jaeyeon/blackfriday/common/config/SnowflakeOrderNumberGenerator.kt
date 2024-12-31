@@ -9,12 +9,19 @@ interface NumberGenerator {
 }
 
 abstract class SnowflakeGenerator {
-    protected val epochTimestamp = 1704034800000L
-    protected val sequenceBits = 12L
-    protected val sequenceMask = -1L xor (-1L shl sequenceBits.toInt())
+    companion object {
+        const val SEQUENCE_BITS = 12L
+        const val EPOCH_TIMESTAMP = 1704034800000L
 
-    protected val sequence = AtomicInteger(0)
-    protected var lastTimestamp = AtomicLong(-1L)
+        const val INITIAL_SEQUENCE = 0
+        const val INITIAL_TIMESTAMP = -1L
+        const val MINUS_ONE = -1L
+        const val ZERO = 0
+    }
+
+    private val sequenceMask = MINUS_ONE xor (MINUS_ONE shl SEQUENCE_BITS.toInt())
+    private val sequence = AtomicInteger(INITIAL_SEQUENCE)
+    private var lastTimestamp = AtomicLong(INITIAL_TIMESTAMP)
 
     @Synchronized
     protected fun nextId(): Long {
@@ -25,16 +32,16 @@ abstract class SnowflakeGenerator {
 
         if (timestamp == currentLastTimestamp) {
             val currentSequence = sequence.getAndIncrement() and sequenceMask.toInt()
-            if (currentSequence == 0) {
+            if (currentSequence == ZERO) {
                 timestamp = waitNextMillis(currentLastTimestamp)
             }
         } else {
-            sequence.set(0)
+            sequence.set(ZERO)
         }
 
         lastTimestamp.set(timestamp)
 
-        return ((timestamp - epochTimestamp) shl sequenceBits.toInt()) or sequence.get().toLong()
+        return ((timestamp - EPOCH_TIMESTAMP) shl SEQUENCE_BITS.toInt()) or sequence.get().toLong()
     }
 
     private fun waitNextMillis(lastTimestamp: Long): Long {
@@ -48,10 +55,18 @@ abstract class SnowflakeGenerator {
 
 @Component
 class OrderNumberGenerator : SnowflakeGenerator(), NumberGenerator {
-    override fun generate(): String = "ORD${nextId()}"
+    companion object {
+        const val PREFIX = "ORD"
+    }
+
+    override fun generate(): String = "$PREFIX${nextId()}"
 }
 
 @Component
 class PaymentNumberGenerator : SnowflakeGenerator(), NumberGenerator {
-    override fun generate(): String = "PAY${nextId()}"
+    companion object {
+        const val PREFIX = "PAY"
+    }
+
+    override fun generate(): String = "$PREFIX${nextId()}"
 }

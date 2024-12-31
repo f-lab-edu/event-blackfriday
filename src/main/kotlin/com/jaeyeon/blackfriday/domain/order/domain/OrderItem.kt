@@ -19,7 +19,7 @@ import java.math.BigDecimal
 class OrderItem(
 
     @Id
-    @Column(name = "order_item_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 

@@ -18,7 +18,7 @@ import jakarta.persistence.Table
 class CategoryClosure(
 
     @Id
-    @Column(name = "closure_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 

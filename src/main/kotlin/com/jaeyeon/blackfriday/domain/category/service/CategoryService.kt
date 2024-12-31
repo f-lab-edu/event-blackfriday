@@ -1,6 +1,7 @@
 package com.jaeyeon.blackfriday.domain.category.service
 
 import com.jaeyeon.blackfriday.common.global.CategoryException
+import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.domain.category.domain.Category
 import com.jaeyeon.blackfriday.domain.category.domain.CategoryClosure
 import com.jaeyeon.blackfriday.domain.category.domain.constant.CategoryConstants.DIRECT_CHILD_DEPTH
@@ -12,6 +13,8 @@ import com.jaeyeon.blackfriday.domain.category.dto.CreateCategoryRequest
 import com.jaeyeon.blackfriday.domain.category.dto.UpdateCategoryRequest
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryClosureRepository
 import com.jaeyeon.blackfriday.domain.category.repository.CategoryRepository
+import com.jaeyeon.blackfriday.domain.member.domain.enum.MembershipType
+import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,19 +24,21 @@ import org.springframework.transaction.annotation.Transactional
 class CategoryService(
     private val categoryRepository: CategoryRepository,
     private val categoryClosureRepository: CategoryClosureRepository,
+    private val memberRepository: MemberRepository,
 ) {
-    fun createCategory(memberId: Long, request: CreateCategoryRequest): CategoryResponse {
+    fun createCategory(sellerId: Long, request: CreateCategoryRequest): CategoryResponse {
+        validateSeller(sellerId)
         validateDuplicateName(request.name, request.depth)
 
-        val category = createCategoryEntity(memberId, request)
+        val category = createCategoryEntity(sellerId, request)
         createCategoryClosureRelations(category, request.parentId)
 
         return CategoryResponse.from(category)
     }
 
-    fun updateCategory(memberId: Long, id: Long, request: UpdateCategoryRequest): CategoryResponse {
+    fun updateCategory(sellerId: Long, id: Long, request: UpdateCategoryRequest): CategoryResponse {
         val category = findCategoryById(id)
-        validateCategoryOwnership(category, memberId)
+        validateCategoryOwner(category, sellerId)
 
         category.update(
             name = request.name,
@@ -42,9 +47,9 @@ class CategoryService(
         return CategoryResponse.from(category)
     }
 
-    fun deleteCategory(memberId: Long, id: Long) {
+    fun deleteCategory(sellerId: Long, id: Long) {
         val category = findCategoryById(id)
-        validateCategoryOwnership(category, memberId)
+        validateCategoryOwner(category, sellerId)
 
         category.isDeleted = true
         categoryClosureRepository.deleteAllByCategoryId(id)
@@ -57,9 +62,9 @@ class CategoryService(
     }
 
     @Transactional(readOnly = true)
-    fun getDirectChildCategories(memberId: Long, parentId: Long): List<CategoryResponse> {
+    fun getDirectChildCategories(sellerId: Long, parentId: Long): List<CategoryResponse> {
         val category = findCategoryById(parentId)
-        validateCategoryOwnership(category, memberId)
+        validateCategoryOwner(category, sellerId)
 
         return categoryClosureRepository.findByAncestorIdAndDepthFetchJoin(
             parentId,
@@ -73,12 +78,12 @@ class CategoryService(
         return rootCategories.map { buildCategoryTree(it) }
     }
 
-    private fun createCategoryEntity(memberId: Long, request: CreateCategoryRequest): Category {
+    private fun createCategoryEntity(sellerId: Long, request: CreateCategoryRequest): Category {
         return categoryRepository.save(
             Category(
-                memberId = memberId,
                 name = request.name,
                 depth = request.depth,
+                sellerId = sellerId,
                 displayOrder = request.displayOrder,
             ),
         )
@@ -103,12 +108,14 @@ class CategoryService(
             ?: throw CategoryException.invalidNotFound()
     }
 
-    private fun validateCategoryOwnership(category: Category, memberId: Long) {
-        if (category.memberId != memberId) {
-            throw CategoryException.notOwner()
+    private fun validateSeller(sellerId: Long) {
+        val seller = memberRepository.findByIdOrNull(sellerId)
+            ?: throw MemberException.notFound()
+
+        if (seller.membershipType != MembershipType.SELLER) {
+            throw MemberException.notSeller()
         }
     }
-
     private fun validateDuplicateName(name: String, depth: Int) {
         if (categoryRepository.existsByNameAndDepth(name, depth)) {
             throw CategoryException.invalidDuplicateName()
@@ -148,6 +155,12 @@ class CategoryService(
                 descendant = category,
                 depth = parentClosure.depth + DIRECT_CHILD_DEPTH,
             )
+        }
+    }
+
+    private fun validateCategoryOwner(category: Category, sellerId: Long) {
+        if (category.sellerId != sellerId) {
+            throw CategoryException.notOwner()
         }
     }
 }

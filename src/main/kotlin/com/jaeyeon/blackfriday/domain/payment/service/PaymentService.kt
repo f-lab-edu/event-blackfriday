@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
 
 @Service
 @Transactional
@@ -28,9 +27,10 @@ class PaymentService(
     fun processPayment(memberId: Long, request: PaymentRequest): PaymentResponse {
         log.info { "Processing payment for order: ${request.orderNumber}" }
 
-        validateOrderPayment(memberId, request.orderNumber, request.amount)
-
         val payment = createPayment(memberId, request)
+        val orderAmount = orderService.getOrderAmount(memberId, request.orderNumber)
+
+        payment.validateAmount(orderAmount)
         val savedPayment = paymentRepository.save(payment)
 
         log.info { "Payment processed successfully: ${savedPayment.paymentNumber}" }
@@ -41,13 +41,11 @@ class PaymentService(
         log.info { "Cancelling payment: $paymentNumber" }
 
         val payment = findPaymentByNumber(paymentNumber)
-        validatePaymentOwnership(payment, memberId)
-        validateCancellableStatus(payment)
-
-        val cancelledPayment = payment.cancel()
+            .also { it.validateOwnership(memberId) }
+            .cancel()
 
         log.info { "Payment cancelled successfully: $paymentNumber" }
-        return PaymentResponse.from(cancelledPayment)
+        return PaymentResponse.from(payment)
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +53,7 @@ class PaymentService(
         log.info { "Fetching payment: $paymentNumber" }
 
         val payment = findPaymentByNumber(paymentNumber)
-        validatePaymentOwnership(payment, memberId)
+            .also { it.validateOwnership(memberId) }
 
         return PaymentResponse.from(payment)
     }
@@ -72,34 +70,13 @@ class PaymentService(
             .map(PaymentResponse::from)
     }
 
-    private fun createPayment(memberId: Long, request: PaymentRequest): Payment {
-        return Payment(
-            paymentNumber = paymentNumberGenerator.generate(),
-            orderNumber = request.orderNumber,
-            memberId = memberId,
-            amount = request.amount,
-            status = PaymentStatus.PENDING,
-        )
-    }
-
-    private fun validateOrderPayment(memberId: Long, orderNumber: String, amount: BigDecimal) {
-        val orderAmount = orderService.getOrderAmount(memberId, orderNumber)
-        if (orderAmount != amount) {
-            throw PaymentException.invalidPaymentAmount()
-        }
-    }
-
-    private fun validateCancellableStatus(payment: Payment) {
-        if (!payment.isCancelable()) {
-            throw PaymentException.invalidPaymentStatus()
-        }
-    }
-
-    private fun validatePaymentOwnership(payment: Payment, memberId: Long) {
-        if (!payment.isOwnedBy(memberId)) {
-            throw PaymentException.notPaymentOwner()
-        }
-    }
+    private fun createPayment(memberId: Long, request: PaymentRequest) = Payment(
+        paymentNumber = paymentNumberGenerator.generate(),
+        orderNumber = request.orderNumber,
+        memberId = memberId,
+        amount = request.amount,
+        status = PaymentStatus.PENDING,
+    )
 
     private fun findPaymentByNumber(paymentNumber: String): Payment {
         return paymentRepository.findByPaymentNumber(paymentNumber)

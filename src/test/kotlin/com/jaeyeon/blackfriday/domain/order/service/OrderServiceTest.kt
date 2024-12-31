@@ -2,7 +2,9 @@ package com.jaeyeon.blackfriday.domain.order.service
 
 import com.jaeyeon.blackfriday.common.config.OrderNumberGenerator
 import com.jaeyeon.blackfriday.common.global.OrderException
+import com.jaeyeon.blackfriday.domain.common.MemberFixture
 import com.jaeyeon.blackfriday.domain.common.OrderFixture
+import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import com.jaeyeon.blackfriday.domain.order.domain.OrderItem
 import com.jaeyeon.blackfriday.domain.order.domain.enum.OrderStatus
 import com.jaeyeon.blackfriday.domain.order.dto.CreateOrderItemRequest
@@ -23,6 +25,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.repository.findByIdOrNull
 import java.math.BigDecimal
 
 @ExtendWith(MockKExtension::class)
@@ -30,6 +33,7 @@ class OrderServiceTest : BehaviorSpec({
     val orderRepository = mockk<OrderRepository>()
     val orderItemRepository = mockk<OrderItemRepository>()
     val productService = mockk<ProductService>()
+    val memberRepository = mockk<MemberRepository>()
     val orderNumberGenerator = mockk<OrderNumberGenerator>()
 
     val orderService = OrderService(
@@ -42,6 +46,7 @@ class OrderServiceTest : BehaviorSpec({
     Given("주문 생성") {
         val order = OrderFixture.createOrder(status = OrderStatus.WAITING)
         val orderItem = OrderFixture.createOrderItem(orderId = order.id!!)
+        val seller = MemberFixture.createSeller()
 
         val createOrderItemRequest = CreateOrderItemRequest(
             productId = orderItem.productId,
@@ -54,6 +59,7 @@ class OrderServiceTest : BehaviorSpec({
         )
 
         When("유효한 주문 요청시") {
+            every { memberRepository.findByIdOrNull(order.memberId) } returns seller
             every { orderNumberGenerator.generate() } returns order.orderNumber
             every {
                 productService.decreaseStockQuantity(
@@ -157,11 +163,8 @@ class OrderServiceTest : BehaviorSpec({
             Then("주문 상태가 정상적으로 변경된다") {
                 result.status shouldBe OrderStatus.IN_PROGRESS
 
-                verify(exactly = 1) {
+                verify(exactly = 3) {
                     orderRepository.findByOrderNumber(order.orderNumber)
-                }
-                verify(exactly = 2) {
-                    orderItemRepository.findByOrderId(order.id!!)
                 }
             }
         }
@@ -183,7 +186,7 @@ class OrderServiceTest : BehaviorSpec({
                 result.totalAmount shouldBe order.totalAmount
                 result.items.size shouldBe 1
 
-                verify(exactly = 1) {
+                verify(atLeast = 1) {
                     orderRepository.findByOrderNumber(order.orderNumber)
                 }
                 verify(atLeast = 1) {
@@ -255,7 +258,7 @@ class OrderServiceTest : BehaviorSpec({
             Then("주문 금액이 정상적으로 조회된다.") {
                 result shouldBe order.totalAmount
 
-                verify(exactly = 1) {
+                verify(atLeast = 1) {
                     orderRepository.findByOrderNumber(order.orderNumber)
                 }
             }

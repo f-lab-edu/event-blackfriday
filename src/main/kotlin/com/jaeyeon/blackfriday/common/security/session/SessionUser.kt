@@ -19,6 +19,7 @@ object SessionConstants {
 
 object Roles {
     const val PRIME = "ROLE_PRIME"
+    const val SELLER = "ROLE_SELLER"
 }
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)

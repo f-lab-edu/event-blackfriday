@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param
 
 interface PaymentRepository : JpaRepository<Payment, Long> {
     fun findByPaymentNumber(paymentNumber: String): Payment?
-    fun findByOrderNumber(orderNumber: String): Payment?
 
     @Query(
         """

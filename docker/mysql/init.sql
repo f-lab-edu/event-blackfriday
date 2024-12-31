@@ -3,7 +3,7 @@ USE blackfriday;
 
 -- Members 테이블
 CREATE TABLE members (
-    member_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
     name VARCHAR(20) NOT NULL,
@@ -17,20 +17,20 @@ CREATE TABLE members (
 
 -- Categories 테이블
 CREATE TABLE categories (
-    category_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     depth INT NOT NULL DEFAULT 1,
-    member_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL,
     display_order INT NOT NULL DEFAULT 1,
     is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    FOREIGN KEY (member_id) REFERENCES members(member_id)
+    FOREIGN KEY (seller_id) REFERENCES members(member_id)
 );
 
 -- Category Closure 테이블 (계층 구조 관리)
 CREATE TABLE category_closure (
-    closure_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     ancestor_id BIGINT NOT NULL,
     descendant_id BIGINT NOT NULL,
     depth INT NOT NULL,
@@ -41,25 +41,25 @@ CREATE TABLE category_closure (
 
 -- Products 테이블
 CREATE TABLE products (
-    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description VARCHAR(2000) NOT NULL,
     price DECIMAL(19,2) NOT NULL,
     stock_quantity INT NOT NULL,
     reserved_stock_quantity INT NOT NULL DEFAULT 0,
-    member_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT false,
     status VARCHAR(20) NOT NULL,
     category_id BIGINT,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     FOREIGN KEY (category_id) REFERENCES categories(category_id),
-    FOREIGN KEY (member_id) REFERENCES members(member_id)
+    FOREIGN KEY (seller_id) REFERENCES members(member_id)
 );
 
 -- Orders 테이블
 CREATE TABLE orders (
-    order_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_number VARCHAR(255) NOT NULL UNIQUE,
     member_id BIGINT NOT NULL,
     status VARCHAR(20) NOT NULL,
@@ -89,8 +89,8 @@ CREATE TABLE payments (
 );
 
 -- 인덱스 추가
-CREATE INDEX idx_products_member ON products(member_id);
-CREATE INDEX idx_categories_member ON categories(member_id);
+CREATE INDEX idx_products_seller ON products(seller_id);
+CREATE INDEX idx_categories_seller ON categories(seller_id);
 CREATE INDEX idx_orders_member ON orders(member_id);
 CREATE INDEX idx_payments_member ON payments(member_id);
 CREATE INDEX idx_orders_order_number ON orders(order_number);
