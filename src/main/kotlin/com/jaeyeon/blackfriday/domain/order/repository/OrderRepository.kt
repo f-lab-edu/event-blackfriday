@@ -15,8 +15,8 @@ interface OrderRepository : JpaRepository<Order, Long> {
         """
         SELECT o FROM Order o
         WHERE o.memberId = :memberId
-        AND (:status IS NULL OR o.status = :status)
-    """,
+        AND (:status is null OR o.status = :status)
+        """,
     )
     fun findOrders(
         @Param("memberId") memberId: Long,

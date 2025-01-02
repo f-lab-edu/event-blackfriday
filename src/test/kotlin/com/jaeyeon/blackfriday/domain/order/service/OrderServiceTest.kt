@@ -2,6 +2,7 @@ package com.jaeyeon.blackfriday.domain.order.service
 
 import com.jaeyeon.blackfriday.common.global.OrderException
 import com.jaeyeon.blackfriday.domain.common.OrderFixture
+import com.jaeyeon.blackfriday.domain.common.ProductFixture
 import com.jaeyeon.blackfriday.domain.common.TestOrderNumberGenerator
 import com.jaeyeon.blackfriday.domain.order.domain.OrderItem
 import com.jaeyeon.blackfriday.domain.order.domain.enum.OrderStatus
@@ -10,6 +11,7 @@ import com.jaeyeon.blackfriday.domain.order.dto.CreateOrderRequest
 import com.jaeyeon.blackfriday.domain.order.repository.OrderItemRepository
 import com.jaeyeon.blackfriday.domain.order.repository.OrderRepository
 import com.jaeyeon.blackfriday.domain.product.domain.enum.ProductStatus
+import com.jaeyeon.blackfriday.domain.product.dto.ProductDetailResponse
 import com.jaeyeon.blackfriday.domain.product.dto.ProductStockResponse
 import com.jaeyeon.blackfriday.domain.product.dto.StockRequest
 import com.jaeyeon.blackfriday.domain.product.service.ProductService
@@ -50,6 +52,16 @@ class OrderServiceTest : BehaviorSpec({
         )
 
         When("유효한 주문 요청시") {
+            val product = ProductFixture.createProduct(
+                id = orderItem.productId,
+                name = orderItem.productName,
+                price = orderItem.price,
+            )
+
+            every {
+                productService.getProduct(orderItem.productId)
+            } returns ProductDetailResponse.from(product)
+
             every {
                 productService.decreaseStockQuantity(
                     order.memberId,

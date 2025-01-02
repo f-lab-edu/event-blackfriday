@@ -79,7 +79,6 @@ dependencies {
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.appmattus.fixture:fixture:1.2.0")
     implementation(platform("org.testcontainers:testcontainers-bom:1.20.1"))
     implementation("org.testcontainers:testcontainers:1.20.1")
     implementation("com.redis:testcontainers-redis:2.0.1")
