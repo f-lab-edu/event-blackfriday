@@ -25,6 +25,7 @@ class ProductException(
             ErrorCode.INVALID_PRODUCT_NOT_FOUND,
             message,
         )
+        fun notOwner() = ProductException(ErrorCode.PRODUCT_NOT_OWNER)
     }
 }
 
@@ -40,6 +41,7 @@ class CategoryException(
         fun invalidClosureDepth() = CategoryException(ErrorCode.INVALID_CATEGORY_CLOSURE_DEPTH)
         fun invalidNotFound() = CategoryException(ErrorCode.INVALID_CATEGORY_NOT_FOUND)
         fun invalidDuplicateName() = CategoryException(ErrorCode.INVALID_CATEGORY_DUPLICATE_NAME)
+        fun notOwner() = CategoryException(ErrorCode.CATEGORY_NOT_OWNER)
     }
 }
 
@@ -59,5 +61,39 @@ class MemberException(
         fun unauthorized() = MemberException(ErrorCode.UNAUTHORIZED)
         fun notSubscribed() = MemberException(ErrorCode.NOT_SUBSCRIBED)
         fun expiredPrimeMembership() = MemberException(ErrorCode.EXPIRED_PRIME_MEMBERSHIP)
+        fun alreadySeller() = MemberException(ErrorCode.ALREADY_SELLER)
+        fun notSeller() = MemberException(ErrorCode.NOT_SELLER)
+    }
+}
+
+class OrderException(
+    errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : BlackFridayException(errorCode, message) {
+
+    companion object {
+        fun invalidTotalAmount() = OrderException(ErrorCode.INVALID_TOTAL_AMOUNT)
+        fun invalidCancelStatus() = OrderException(ErrorCode.INVALID_CANCEL_STATUS)
+        fun invalidStatusTransition() = OrderException(ErrorCode.INVALID_STATUS_TRANSITION)
+        fun invalidOrderQuantity() = OrderException(ErrorCode.INVALID_ORDER_QUANTITY)
+        fun invalidOrderPrice() = OrderException(ErrorCode.INVALID_ORDER_PRICE)
+        fun orderNotFound() = OrderException(ErrorCode.ORDER_NOT_FOUND)
+        fun invalidOrderStatus() = OrderException(ErrorCode.INVALID_ORDER_STATUS)
+        fun invalidProductName() = OrderException(ErrorCode.INVALID_PRODUCT_NAME)
+        fun notOwner() = OrderException(ErrorCode.ORDER_NOT_OWNER)
+        fun invalidProductPrice() = OrderException(ErrorCode.INVALID_PRODUCT_PRICE)
+    }
+}
+
+class PaymentException(
+    errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : BlackFridayException(errorCode, message) {
+
+    companion object {
+        fun invalidPaymentAmount() = PaymentException(ErrorCode.INVALID_PAYMENT_AMOUNT)
+        fun paymentNotFound() = PaymentException(ErrorCode.PAYMENT_NOT_FOUND)
+        fun invalidPaymentStatus() = PaymentException(ErrorCode.INVALID_PAYMENT_STATUS)
+        fun notPaymentOwner() = PaymentException(ErrorCode.ORDER_NOT_OWNER)
     }
 }

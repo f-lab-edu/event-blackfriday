@@ -1,0 +1,44 @@
+### 환경 변수 설정
+@host = http://localhost:8080
+
+### 1. 결제 처리
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+X-Auth-Token: {{auth_token}}
+
+{
+  "orderNumber": "{{orderNumber}}",
+  "amount": 10000
+}
+
+> {%
+    client.global.set("paymentNumber", response.body.paymentNumber)
+%}
+
+### 2. 결제 취소
+POST {{host}}/api/v1/payments/{{paymentNumber}}/cancel
+X-Auth-Token: {{auth_token}}
+
+### 3. 결제 실패 처리
+POST {{host}}/api/v1/payments/{{paymentNumber}}/fail
+X-Auth-Token: {{auth_token}}
+
+### 4. 결제 환불
+POST {{host}}/api/v1/payments/{{paymentNumber}}/refund
+X-Auth-Token: {{auth_token}}
+
+### 5. 단일 결제 조회
+GET {{host}}/api/v1/payments/{{paymentNumber}}
+X-Auth-Token: {{auth_token}}
+
+### 6. 결제 목록 조회 (전체)
+GET {{host}}/api/v1/payments?page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 7. 결제 목록 조회 (상태별)
+GET {{host}}/api/v1/payments?status=COMPLETED&page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 8. 결제 목록 조회 (정렬)
+GET {{host}}/api/v1/payments?page=0&size=10&sort=createdAt,desc
+X-Auth-Token: {{auth_token}}

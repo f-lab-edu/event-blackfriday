@@ -1,11 +1,12 @@
 ### 상품 생성
 POST http://localhost:8080/api/v1/products
 Content-Type: application/json
+X-Auth-Token: {{auth_token}}
 
 {
-  "name": "테스트 상품",
+  "name": "맥북",
   "description": "상품 상세 설명",
-  "price": 100000,
+  "price": 10000,
   "stockQuantity": 100,
   "categoryId": 1
 }
@@ -13,6 +14,7 @@ Content-Type: application/json
 ### 상품 수정
 PUT http://localhost:8080/api/v1/products/1
 Content-Type: application/json
+X-Auth-Token: {{auth_token}}
 
 {
   "name": "수정된 상품명",
@@ -23,6 +25,7 @@ Content-Type: application/json
 
 ### 상품 삭제
 DELETE http://localhost:8080/api/v1/products/1
+X-Auth-Token: {{auth_token}}
 
 ### 상품 상세 조회
 GET http://localhost:8080/api/v1/products/1
@@ -45,6 +48,7 @@ GET http://localhost:8080/api/v1/products/search?keyword=테스트&page=0&size=2
 ### 재고 증가
 POST http://localhost:8080/api/v1/products/1/stock/increase
 Content-Type: application/json
+X-Auth-Token: {{auth_token}}
 
 {
   "amount": 50
@@ -53,6 +57,7 @@ Content-Type: application/json
 ### 재고 감소
 POST http://localhost:8080/api/v1/products/1/stock/decrease
 Content-Type: application/json
+X-Auth-Token: {{auth_token}}
 
 {
   "amount": 20

@@ -1,0 +1,60 @@
+### 1. 주문 생성
+POST http://localhost:8080/api/v1/orders
+Content-Type: application/json
+X-Auth-Token: {{auth_token}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "productName": "맥북",
+      "quantity": 1,
+      "price": 10000
+    }
+  ]
+}
+
+> {%
+    client.global.set("orderNumber", response.body.orderNumber)
+%}
+
+### 2. 결제 완료 처리
+POST http://localhost:8080/api/v1/orders/{{orderNumber}}/complete-payment
+X-Auth-Token: {{auth_token}}
+
+### 3. 주문 취소
+POST http://localhost:8080/api/v1/orders/{{orderNumber}}/cancel
+X-Auth-Token: {{auth_token}}
+
+### 4. 주문 조회
+GET http://localhost:8080/api/v1/orders/{{orderNumber}}
+X-Auth-Token: {{auth_token}}
+
+### 5. 주문 목록 조회 (전체)
+GET http://localhost:8080/api/v1/orders?page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 6. 주문 목록 조회 (상태별)
+GET http://localhost:8080/api/v1/orders?status=PENDING_PAYMENT&page=0&size=10
+X-Auth-Token: {{auth_token}}
+
+### 7. 결제 대기 상태 확인
+GET http://localhost:8080/api/v1/orders/{{orderNumber}}/pending-payment
+X-Auth-Token: {{auth_token}}
+
+> {%
+    client.test("결제 대기 상태 확인", function() {
+        client.assert(response.status === 200, "Status code is 200");
+    });
+%}
+
+
+### 8. 결제 완료 상태 확인
+GET http://localhost:8080/api/v1/orders/{{orderNumber}}/paid
+X-Auth-Token: {{auth_token}}
+
+> {%
+    client.test("결제 완료 상태 확인", function() {
+        client.assert(response.status === 200, "Status code is 200");
+    });
+%}

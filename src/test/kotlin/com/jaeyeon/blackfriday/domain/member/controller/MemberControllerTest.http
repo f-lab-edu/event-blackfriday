@@ -47,6 +47,18 @@ X-Auth-Token: {{auth_token}}
 DELETE http://localhost:8080/api/v1/members/accounts/me
 X-Auth-Token: {{auth_token}}
 
+### 판매자 권한 신청
+POST http://localhost:8080/api/v1/members/seller
+Content-Type: application/json
+X-Auth-Token: {{auth_token}}
+
+> {%
+    client.test("판매자 권한 신청 성공", function() {
+        client.assert(response.status === 200, "Response status is OK");
+        client.assert(response.body.membershipType === "SELLER", "Membership type is SELLER");
+    });
+%}
+
 ### 에러 케이스 테스트 ###
 
 ### 이미 존재하는 이메일로 회원가입
@@ -103,3 +115,14 @@ GET http://localhost:8080/api/v1/members/profile
 ### 잘못된 인증 토큰으로 프로필 조회
 GET http://localhost:8080/api/v1/members/profile
 X-Auth-Token: invalid-token
+
+
+### 판매자 권한 신청 - 로그인하지 않은 경우
+POST http://localhost:8080/api/v1/members/seller
+Content-Type: application/json
+
+> {%
+    client.test("인증되지 않은 요청", function() {
+        client.assert(response.status === 401, "Response status is Unauthorized");
+    });
+%}

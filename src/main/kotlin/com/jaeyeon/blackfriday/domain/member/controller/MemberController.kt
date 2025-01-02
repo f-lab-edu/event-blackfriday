@@ -130,4 +130,10 @@ class MemberController(
     fun deleteMyAccount(@CurrentUser memberId: Long) {
         memberService.withdraw(memberId)
     }
+
+    @LoginRequired
+    @PostMapping("/seller")
+    fun upgradeToSeller(@CurrentUser memberId: Long): MemberResponse {
+        return memberService.upgradeToSeller(memberId)
+    }
 }

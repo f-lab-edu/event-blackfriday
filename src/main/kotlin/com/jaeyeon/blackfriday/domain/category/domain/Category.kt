@@ -21,7 +21,7 @@ import org.hibernate.annotations.SQLRestriction
 class Category(
 
     @Id
-    @Column(name = "category_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
@@ -30,6 +30,9 @@ class Category(
 
     @Column(nullable = false)
     var depth: Int = 1,
+
+    @Column(name = "seller_id", nullable = false)
+    val sellerId: Long,
 
     @Column(nullable = false)
     var displayOrder: Int = 1,
