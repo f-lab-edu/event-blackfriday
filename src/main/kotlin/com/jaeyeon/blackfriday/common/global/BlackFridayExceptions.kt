@@ -97,3 +97,18 @@ class PaymentException(
         fun notPaymentOwner() = PaymentException(ErrorCode.ORDER_NOT_OWNER)
     }
 }
+
+class OrderQueueException(
+    errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : BlackFridayException(errorCode, message) {
+
+    companion object {
+        fun queueFull() = OrderQueueException(ErrorCode.QUEUE_FULL)
+        fun alreadyInQueue() = OrderQueueException(ErrorCode.QUEUE_ALREADY_IN)
+        fun failedToAddToQueue() = OrderQueueException(ErrorCode.QUEUE_ADD_FAILED)
+        fun queuePositionNotFound() = OrderQueueException(ErrorCode.QUEUE_POSITION_NOT_FOUND)
+        fun timeout() = OrderQueueException(ErrorCode.QUEUE_TIMEOUT)
+        fun invalidAccess() = OrderQueueException(ErrorCode.QUEUE_INVALID_ACCESS)
+    }
+}
