@@ -93,30 +93,22 @@ jobs:
       - name: Copy configuration files
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.NCP_HOST }}
+          host: ${{ secrets.GCP_HOST }}
           username: deploy-user
-          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           source: "docker/*, deploy.sh"
           target: "/app"
           strip_components: 0
 
-      - name: Deploy to NCP
+      - name: Deploy to GCP
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.NCP_HOST }}
+          host: ${{ secrets.GCP_HOST }}
           username: deploy-user
-          key: ${{ secrets.NCP_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           script: |
             mkdir -p /app
             cd /app
-            
-            if ! command -v docker compose &> /dev/null; then
-              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-              mkdir -p $DOCKER_CONFIG/cli-plugins
-              curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 \
-                -o $DOCKER_CONFIG/cli-plugins/docker-compose
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-            fi
             
             cat > docker/.env <<EOL
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
