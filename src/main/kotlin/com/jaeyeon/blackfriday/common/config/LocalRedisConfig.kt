@@ -15,9 +15,11 @@ import org.testcontainers.utility.DockerImageName
 @Configuration
 @Profile("local")
 class LocalRedisConfig {
-    private val redisContainer = GenericContainer(DockerImageName.parse("redis:7.4.1-alpine")).apply {
-        withExposedPorts(6379)
-        start()
+    companion object {
+        val redisContainer = GenericContainer(DockerImageName.parse("redis:7.4.1-alpine")).apply {
+            withExposedPorts(6379)
+            start()
+        }
     }
 
     @Bean

@@ -1,8 +1,12 @@
 package com.jaeyeon.blackfriday.domain.order.service
 
+import com.jaeyeon.blackfriday.common.global.OrderQueueException
+import com.jaeyeon.blackfriday.common.lock.DistributedLockManager
 import com.jaeyeon.blackfriday.domain.order.queue.QueueProperties
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.testcontainers.containers.GenericContainer
@@ -28,7 +32,9 @@ class OrderQueueServiceTest : BehaviorSpec({
         checkInterval = 5000,
     )
 
-    val orderQueueService = OrderQueueService(redisTemplate, queueProperties)
+    // relaxed=true로 설정하여 모든 메서드 호출에 대해 기본값 반환
+    val distributedLockManager = mockk<DistributedLockManager>(relaxed = true)
+    val orderQueueService = OrderQueueService(redisTemplate, queueProperties, distributedLockManager)
     val queueKey = "blackfriday:order:queue"
 
     beforeSpec {
@@ -104,19 +110,19 @@ class OrderQueueServiceTest : BehaviorSpec({
     }
 
     given("처리 가능한 대기열 위치") {
-        `when`("사용자 위치가 처리 임계값 이내에 있으면") {
+        `when`("사용자가 대기열 앞쪽에 있을 때") {
             val user1 = "user1"
             orderQueueService.addToQueue(user1)
             val position = orderQueueService.getPosition(user1)
 
             val isReady = orderQueueService.isReadyToProcess(position)
 
-            then("처리 가능 상태여야 한다") {
+            then("주문 처리 가능 상태여야 한다") {
                 isReady shouldBe true
             }
         }
 
-        `when`("사용자 위치가 처리 임계값 밖에 있으면") {
+        `when`("사용자가 대기열 뒤쪽에 있을 때") {
             for (i in 1..4) {
                 orderQueueService.addToQueue("user$i")
             }
@@ -131,7 +137,7 @@ class OrderQueueServiceTest : BehaviorSpec({
     }
 
     given("대기열에서 제거할 사용자") {
-        `when`("사용자가 대기열에서 제거되면") {
+        `when`("사용자가 대기열에서 성공적으로 제거되면") {
             val user1 = "user1"
             orderQueueService.addToQueue(user1)
             orderQueueService.removeFromQueue(user1)
@@ -153,20 +159,16 @@ class OrderQueueServiceTest : BehaviorSpec({
             val initialRank = redisTemplate.opsForZSet().rank(queueKey, userId)
             println("Redis 대기열에서 사용자 위치(1번째 추가 후): $initialRank")
 
-            try {
-                orderQueueService.addToQueue(userId)
-            } catch (e: Exception) {
-                println("예상된 예외 발생: ${e.javaClass.simpleName}")
+            then("두 번째 추가 시도는 예외를 발생시킨다") {
+                shouldThrow<OrderQueueException> {
+                    orderQueueService.addToQueue(userId)
+                }
             }
 
-            val rankAfterException = redisTemplate.opsForZSet().rank(queueKey, userId)
-            println("Redis 대기열에서 사용자 위치(예외 후): $rankAfterException")
-
-            then("대기열 상태 검증") {
+            then("사용자는 여전히 대기열에 존재해야 한다") {
                 val positionAfterException = orderQueueService.getPosition(userId)
-                positionAfterException.position shouldBe 0
-
-                orderQueueService.getTotalWaiting() shouldBe 0
+                positionAfterException.position shouldBe 1
+                orderQueueService.getTotalWaiting() shouldBe 1
             }
         }
     }
@@ -179,40 +181,14 @@ class OrderQueueServiceTest : BehaviorSpec({
             orderQueueService.addToQueue(user1)
             orderQueueService.addToQueue(user2)
 
-            then("실제 관찰된 동작에 맞게 검증") {
-                orderQueueService.getTotalWaiting() shouldBe 0
+            then("각 사용자는 순서대로 대기열에 위치해야 한다") {
+                orderQueueService.getTotalWaiting() shouldBe 2
 
                 val position1 = orderQueueService.getPosition(user1)
                 val position2 = orderQueueService.getPosition(user2)
 
-                position1.position shouldBe 0
-                position2.position shouldBe 0
-            }
-        }
-    }
-
-    given("대기열 추가 및 검증") {
-        `when`("대기열에 사용자를 추가한 직후 즉시 위치 확인") {
-            val user = "persistentUser"
-
-            val queuePosition = orderQueueService.addToQueue(user)
-
-            then("추가 직후에는 올바른 위치가 반환되어야 함") {
-                queuePosition.position shouldBe 1L
-            }
-        }
-    }
-
-    given("Redis 작업 검증") {
-        `when`("Redis에 직접 추가할 때") {
-            redisTemplate.execute { connection -> connection.serverCommands().flushDb(); true }
-
-            val keyName = "test:key"
-            redisTemplate.opsForValue().set(keyName, "test-value")
-            val value = redisTemplate.opsForValue().get(keyName)
-
-            then("Redis 작업이 정상 작동해야 함") {
-                value shouldBe "test-value"
+                position1.position shouldBe 1
+                position2.position shouldBe 2
             }
         }
     }

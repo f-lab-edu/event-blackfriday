@@ -59,17 +59,16 @@ class OrderController(
         return if (orderQueueService.isReadyToProcess(queuePosition)) {
             processOrder(memberId, request)
         } else {
-            enqueueOrder(queuePosition)
+            createQueueResponse(queuePosition)
         }
     }
 
     private fun processOrder(memberId: Long, request: CreateOrderRequest): ResponseEntity<OrderResponse> {
         val order = orderService.createOrder(memberId, request)
-        orderQueueService.removeFromQueue(memberId.toString())
         return ResponseEntity.status(HttpStatus.CREATED).body(order)
     }
 
-    private fun enqueueOrder(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
+    private fun createQueueResponse(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
             .body(
                 OrderQueueResponse(

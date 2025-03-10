@@ -11,12 +11,6 @@ class QueueMaintenanceScheduler(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(fixedRate = 60000)
-    fun cleanupTimeoutUsers() {
-        log.debug("Starting cleanup of timeout users")
-        orderQueueService.removeTimeoutUsers()
-    }
-
     @Scheduled(fixedRate = 10000)
     fun updateProcessingRate() {
         log.debug("Starting processing rate update")

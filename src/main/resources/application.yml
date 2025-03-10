@@ -20,6 +20,7 @@ logging:
     com.jaeyeon.blackfriday: DEBUG
     org.springframework.web: INFO
     org.springframework.session: INFO
+    org.redisson.connection.DNSMonitor: ERROR
 
 spring:
   session:
@@ -63,7 +64,6 @@ server:
 ratelimit:
   order:
     requests-per-second: 10
-    burst-capacity: 20
     window-size-in-seconds: 1
 
 queue:
@@ -111,7 +111,6 @@ logging:
 ratelimit:
   order:
     requests-per-second: 10
-    burst-capacity: 20
     window-size-in-seconds: 1
 
 queue:
@@ -156,7 +155,6 @@ spring:
 ratelimit:
   order:
     requests-per-second: 10
-    burst-capacity: 20
     window-size-in-seconds: 1
 
 queue:

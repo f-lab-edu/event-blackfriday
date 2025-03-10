@@ -7,6 +7,11 @@ object OrderConstants {
     object Queue {
         const val PROCESSING_THRESHOLD = 3
         const val LOCK_TIMEOUT_SECONDS = 30
+        const val DEFAULT_POSITION_WHEN_NOT_IN_QUEUE = 0L
+        const val PROCESSING_COUNT_RESET_VALUE = 0
+        const val MILLISECONDS_TO_SECONDS = 1000.0
+        const val QUEUE_POSITION_OFFSET = 1
+        const val EMPTY_QUEUE_SIZE = 0L
 
         object Keys {
             private const val NAMESPACE = "blackfriday"

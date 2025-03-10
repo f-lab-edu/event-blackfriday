@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class RateLimitInfo(
     val limit: Int,
-    val remaining: Int,
+    val remaining: Long,
     val resetTime: LocalDateTime,
     val windowSizeInSeconds: Int,
 )

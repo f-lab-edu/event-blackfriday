@@ -67,6 +67,7 @@ dependencies {
     implementation("org.springframework.security:spring-security-crypto:5.7.1")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.session:spring-session-data-redis")
+    implementation("org.redisson:redisson:3.45.0")
     testImplementation("com.epages:restdocs-api-spec-mockmvc:0.17.1")
 
     // Swagger

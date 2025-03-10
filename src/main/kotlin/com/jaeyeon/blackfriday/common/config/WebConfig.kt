@@ -20,41 +20,36 @@ class WebConfig(
     private val orderRateLimitInterceptor: OrderRateLimitInterceptor,
 ) : WebMvcConfigurer {
 
+    companion object {
+        private val SWAGGER_PATHS = listOf(
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+        )
+
+        private val PUBLIC_PATHS = listOf(
+            "/api/v1/members/signup",
+            "/api/v1/members/login",
+            "/products/**",
+        ) + SWAGGER_PATHS
+    }
+
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(authenticationInterceptor)
             .addPathPatterns("/api/**", "/members/**")
-            .excludePathPatterns(
-                "/api/v1/members/signup",
-                "/api/v1/members/login",
-                "/products/**",
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-            )
+            .excludePathPatterns(PUBLIC_PATHS)
 
         registry.addInterceptor(primeMembershipInterceptor)
             .addPathPatterns("/api/**")
-            .excludePathPatterns(
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-            )
+            .excludePathPatterns(SWAGGER_PATHS)
 
         registry.addInterceptor(sellerInterceptor)
             .addPathPatterns("/api/**")
-            .excludePathPatterns(
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-            )
+            .excludePathPatterns(SWAGGER_PATHS)
 
         registry.addInterceptor(orderRateLimitInterceptor)
             .addPathPatterns("/api/v1/orders/**")
-            .excludePathPatterns(
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-            )
+            .excludePathPatterns(SWAGGER_PATHS)
     }
 
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
