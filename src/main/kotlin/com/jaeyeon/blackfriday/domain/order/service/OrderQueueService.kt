@@ -42,8 +42,10 @@ class OrderQueueService(
                 throw OrderQueueException.queueFull()
             }
 
-            val rank = redisTemplate.opsForZSet().rank(QUEUE_KEY, userId)
-            if (rank != null) {
+            val score = redisTemplate.opsForZSet().score(QUEUE_KEY, userId)
+            if (score != null) {
+                val rank = redisTemplate.opsForZSet().rank(QUEUE_KEY, userId)
+                    ?: DEFAULT_POSITION_WHEN_NOT_IN_QUEUE
                 log.warn("User [{}] is already in the queue. Position: {}", userId, rank + 1)
                 throw OrderQueueException.alreadyInQueue()
             }
@@ -113,7 +115,8 @@ class OrderQueueService(
     }
 
     fun isReadyToProcess(position: QueuePosition): Boolean {
-        return position.position <= PROCESSING_THRESHOLD
+        if (position.position <= 0) return false
+        return position.position < PROCESSING_THRESHOLD
     }
 
     fun updateProcessingRate() {

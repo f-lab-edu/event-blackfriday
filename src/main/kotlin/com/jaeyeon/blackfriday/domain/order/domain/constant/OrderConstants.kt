@@ -5,7 +5,7 @@ object OrderConstants {
     const val MIN_PRICE = 0
 
     object Queue {
-        const val PROCESSING_THRESHOLD = 3
+        const val PROCESSING_THRESHOLD = 50
         const val LOCK_TIMEOUT_SECONDS = 30
         const val DEFAULT_POSITION_WHEN_NOT_IN_QUEUE = 0L
         const val PROCESSING_COUNT_RESET_VALUE = 0

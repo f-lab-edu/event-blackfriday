@@ -66,12 +66,9 @@ enum class ErrorCode(
 
     // Queue Errors
     QUEUE_FULL(HttpStatus.SERVICE_UNAVAILABLE, "QUEUE-001", "대기열이 가득 찼습니다. 잠시 후 다시 시도해주세요."),
-    QUEUE_POSITION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUEUE-002", "대기열 위치를 찾을 수 없습니다."),
-    QUEUE_ALREADY_IN(HttpStatus.BAD_REQUEST, "QUEUE-003", "이미 대기열에 있는 사용자입니다."),
-    QUEUE_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "QUEUE-004", "대기열 추가에 실패했습니다."),
-    QUEUE_TIMEOUT(HttpStatus.GONE, "QUEUE-005", "대기 시간이 초과되었습니다."),
-    QUEUE_INVALID_ACCESS(HttpStatus.BAD_REQUEST, "QUEUE-006", "잘못된 대기열 접근입니다."),
-    QUEUE_ENTERED(HttpStatus.ACCEPTED, "QUEUE-008", "현재 주문이 많아 대기열에 등록되었습니다. 잠시만 기다려주세요."),
+    QUEUE_ALREADY_IN(HttpStatus.BAD_REQUEST, "QUEUE-002", "이미 대기열에 있는 사용자입니다."),
+    QUEUE_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "QUEUE-003", "대기열 추가에 실패했습니다."),
+    QUEUE_ENTERED(HttpStatus.ACCEPTED, "QUEUE-004", "현재 주문이 많아 대기열에 등록되었습니다. 잠시만 기다려주세요."),
 }
 
 data class ErrorResponse(
