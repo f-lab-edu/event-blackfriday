@@ -2,8 +2,8 @@ package com.jaeyeon.blackfriday.domain.order.domain
 
 import com.jaeyeon.blackfriday.common.global.OrderException
 import com.jaeyeon.blackfriday.common.model.BaseTimeEntity
-import com.jaeyeon.blackfriday.domain.order.domain.constant.OrderConstant.MIN_PRICE
-import com.jaeyeon.blackfriday.domain.order.domain.constant.OrderConstant.MIN_QUANTITY
+import com.jaeyeon.blackfriday.domain.order.domain.constant.OrderConstants.MIN_PRICE
+import com.jaeyeon.blackfriday.domain.order.domain.constant.OrderConstants.MIN_QUANTITY
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

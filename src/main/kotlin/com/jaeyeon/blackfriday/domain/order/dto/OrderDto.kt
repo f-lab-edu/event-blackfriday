@@ -1,5 +1,6 @@
 package com.jaeyeon.blackfriday.domain.order.dto
 
+import com.jaeyeon.blackfriday.common.exception.ErrorCode
 import com.jaeyeon.blackfriday.domain.order.domain.Order
 import com.jaeyeon.blackfriday.domain.order.domain.OrderItem
 import com.jaeyeon.blackfriday.domain.order.domain.enum.OrderStatus
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDateTime
 
 data class CreateOrderRequest(
@@ -110,3 +112,16 @@ data class OrderSummaryResponse(
         )
     }
 }
+
+data class QueuePosition(
+    val position: Long,
+    val totalWaiting: Long,
+    val enteredAt: Instant? = null,
+)
+
+data class OrderQueueResponse(
+    val position: Long,
+    val totalWaiting: Long,
+    val enteredAt: Instant? = null,
+    val message: String = ErrorCode.QUEUE_ENTERED.message,
+)

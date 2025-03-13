@@ -18,6 +18,7 @@ import com.jaeyeon.blackfriday.domain.product.service.ProductService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
@@ -28,6 +29,7 @@ class OrderServiceTest : BehaviorSpec({
     val orderRepository = mockk<OrderRepository>()
     val orderItemRepository = mockk<OrderItemRepository>()
     val productService = mockk<ProductService>()
+    val orderQueueService = mockk<OrderQueueService>()
     val orderNumberGenerator = TestOrderNumberGenerator()
 
     val orderService = OrderService(
@@ -35,6 +37,7 @@ class OrderServiceTest : BehaviorSpec({
         orderItemRepository,
         productService,
         orderNumberGenerator,
+        orderQueueService,
     )
 
     Given("주문 생성") {
@@ -94,6 +97,7 @@ class OrderServiceTest : BehaviorSpec({
         When("유효한 결제 완료 요청시") {
             every { orderRepository.findByOrderNumber(pendingOrder.orderNumber) } returns pendingOrder
             every { orderItemRepository.findByOrderId(pendingOrder.id!!) } returns listOf(orderItem)
+            every { orderQueueService.removeFromQueue(pendingOrder.memberId.toStr()) } returns Unit
 
             val result = orderService.completePayment(pendingOrder.memberId, pendingOrder.orderNumber)
 

@@ -27,6 +27,7 @@ class OrderService(
     private val orderItemRepository: OrderItemRepository,
     private val productService: ProductService,
     private val orderNumberGenerator: OrderNumberGenerator,
+    private val orderQueueService: OrderQueueService,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -70,6 +71,8 @@ class OrderService(
                 }
             }
             .also { it.completePay() }
+
+        orderQueueService.removeFromQueue(memberId.toString())
 
         val orderItems = orderItemRepository.findByOrderId(order.id!!)
 
