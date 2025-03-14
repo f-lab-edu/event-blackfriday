@@ -109,22 +109,3 @@ class OrderQueueException(
         fun failedToAddToQueue() = OrderQueueException(ErrorCode.QUEUE_ADD_FAILED)
     }
 }
-
-class MemberException(
-    errorCode: ErrorCode,
-    message: String? = errorCode.message,
-) : BlackFridayException(errorCode, message) {
-
-    companion object {
-        fun invalidEmail() = MemberException(ErrorCode.INVALID_MEMBER_EMAIL)
-        fun invalidPassword() = MemberException(ErrorCode.INVALID_MEMBER_PASSWORD)
-        fun invalidName() = MemberException(ErrorCode.INVALID_MEMBER_NAME)
-        fun notFound() = MemberException(ErrorCode.MEMBER_NOT_FOUND)
-        fun alreadyExists() = MemberException(ErrorCode.MEMBER_ALREADY_EXISTS)
-        fun alreadySubscribed() = MemberException(ErrorCode.ALREADY_SUBSCRIBED)
-        fun alreadyWithdrawn() = MemberException(ErrorCode.ALREADY_WITHDRAWN)
-        fun unauthorized() = MemberException(ErrorCode.UNAUTHORIZED)
-        fun notSubscribed() = MemberException(ErrorCode.NOT_SUBSCRIBED)
-        fun expiredPrimeMembership() = MemberException(ErrorCode.EXPIRED_PRIME_MEMBERSHIP)
-    }
-}
