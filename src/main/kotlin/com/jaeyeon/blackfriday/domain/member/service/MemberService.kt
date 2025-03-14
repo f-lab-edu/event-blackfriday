@@ -3,13 +3,13 @@ package com.jaeyeon.blackfriday.domain.member.service
 import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
-import com.jaeyeon.blackfriday.domain.member.domain.Member
 import com.jaeyeon.blackfriday.domain.member.dto.LoginRequest
 import com.jaeyeon.blackfriday.domain.member.dto.MemberResponse
 import com.jaeyeon.blackfriday.domain.member.dto.SignUpRequest
 import com.jaeyeon.blackfriday.domain.member.dto.UpdateMemberRequest
 import com.jaeyeon.blackfriday.domain.member.repository.MemberRepository
 import jakarta.servlet.http.HttpSession
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,22 +54,42 @@ class MemberService(
     }
 
     @Transactional(readOnly = true)
-    fun getMyInfo(member: Member): MemberResponse {
+    fun getMyInfo(memberId: Long): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
         return MemberResponse.from(member)
     }
 
-    fun updateMember(member: Member, request: UpdateMemberRequest): MemberResponse {
+    fun updateMember(memberId: Long, request: UpdateMemberRequest): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
         request.name?.let { member.updateName(it) }
         request.password?.let {
             member.updatePassword(passwordEncoder.encode(it))
         }
 
-        return MemberResponse.from(memberRepository.save(member))
+        return MemberResponse.from(member)
     }
 
-    fun withdraw(member: Member) {
+    fun withdraw(memberId: Long) {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
         member.withdraw()
         memberRepository.save(member)
         httpSession.invalidate()
+    }
+
+    fun upgradeToSeller(memberId: Long): MemberResponse {
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw MemberException.notFound()
+
+        member.upgradeToSeller()
+        val savedMember = memberRepository.save(member)
+
+        httpSession.setAttribute(USER_KEY, SessionUser.from(savedMember))
+
+        return MemberResponse.from(savedMember)
     }
 }

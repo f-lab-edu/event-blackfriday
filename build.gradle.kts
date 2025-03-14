@@ -8,10 +8,19 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
     id("com.google.cloud.tools.jib") version "3.4.4"
+    id("org.asciidoctor.jvm.convert") version "3.3.2"
+    id("com.epages.restdocs-api-spec") version "0.17.1"
 }
 
 group = "com.jaeyeon"
 version = "0.0.1-SNAPSHOT"
+
+val snippetsDir by extra { file("build/generated-snippets") }
+
+tasks.test {
+    useJUnitPlatform()
+    outputs.dir(snippetsDir)
+}
 
 java {
     toolchain {
@@ -58,6 +67,8 @@ dependencies {
     implementation("org.springframework.security:spring-security-crypto:5.7.1")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.session:spring-session-data-redis")
+    implementation("org.redisson:redisson:3.45.0")
+    testImplementation("com.epages:restdocs-api-spec-mockmvc:0.17.1")
 
     // Swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
@@ -79,13 +90,18 @@ dependencies {
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
+    implementation(platform("org.testcontainers:testcontainers-bom:1.20.1"))
+    implementation("org.testcontainers:testcontainers:1.20.1")
+    implementation("com.redis:testcontainers-redis:2.0.1")
+
+    testImplementation("org.testcontainers:testcontainers:1.20.1")
+    testImplementation("com.redis:testcontainers-redis:2.0.1")
 
     // Kotest
     testImplementation("io.kotest:kotest-runner-junit5:5.9.0")
     testImplementation("io.kotest:kotest-assertions-core:5.9.1")
     testImplementation("io.kotest:kotest-property:5.9.1")
     testImplementation("io.kotest.extensions:kotest-extensions-spring:1.3.0")
-
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

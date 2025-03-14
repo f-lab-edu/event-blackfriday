@@ -92,38 +92,47 @@ class MemberServiceTest : BehaviorSpec({
         }
 
         When("내 정보를 조회할 때") {
+            val memberId = 1L
+
+            every { memberRepository.findByIdOrNull(memberId) } returns member
+
             Then("회원 정보가 조회된다") {
-                val result = memberService.getMyInfo(member)
+                val result = memberService.getMyInfo(memberId)
 
                 result.email shouldBe email
                 result.name shouldBe name
+
+                verify { memberRepository.findByIdOrNull(memberId) }
             }
         }
 
         When("회원 정보를 수정할 때") {
+            val memberId = 1L
             val newName = "NewName"
             val request = UpdateMemberRequest(name = newName)
 
-            every { memberRepository.findByIdOrNull(any()) } returns member
-            every { memberRepository.save(any()) } returns member.apply {
-                updateName(newName)
-            }
+            every { memberRepository.findByIdOrNull(memberId) } returns member
 
             Then("회원 정보가 수정된다") {
-                val result = memberService.updateMember(member, request)
+                val result = memberService.updateMember(memberId, request)
                 result.name shouldBe newName
-                verify { memberRepository.save(any()) }
+                verify { memberRepository.findByIdOrNull(memberId) }
             }
         }
 
         When("회원 탈퇴를 시도할 때") {
+            val memberId = 1L
+
+            every { memberRepository.findByIdOrNull(memberId) } returns member
             every { memberRepository.save(any()) } returns member
             every { httpSession.invalidate() } just runs
 
             Then("회원 탈퇴가 성공한다") {
                 shouldNotThrow<Exception> {
-                    memberService.withdraw(member)
+                    memberService.withdraw(memberId)
                 }
+
+                verify { memberRepository.findByIdOrNull(memberId) }
                 verify { memberRepository.save(any()) }
                 verify { httpSession.invalidate() }
             }

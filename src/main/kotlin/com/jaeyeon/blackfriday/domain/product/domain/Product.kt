@@ -32,7 +32,7 @@ import java.math.BigDecimal
 class Product(
 
     @Id
-    @Column(name = "product_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
@@ -53,6 +53,9 @@ class Product(
 
     @Column(nullable = false)
     var isDeleted: Boolean = false,
+
+    @Column(name = "seller_id", nullable = false)
+    val sellerId: Long,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

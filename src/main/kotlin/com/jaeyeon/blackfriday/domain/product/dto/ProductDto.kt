@@ -62,6 +62,7 @@ data class StockRequest(
 
 data class ProductListResponse(
     val id: Long,
+    val sellerId: Long,
     val name: String,
     val price: BigDecimal,
     val availableStockQuantity: Int,
@@ -72,6 +73,7 @@ data class ProductListResponse(
     companion object {
         fun from(product: Product): ProductListResponse = ProductListResponse(
             id = product.id!!,
+            sellerId = product.sellerId,
             name = product.name,
             price = product.price,
             availableStockQuantity = product.availableStockQuantity(),
@@ -83,6 +85,7 @@ data class ProductListResponse(
 
 data class ProductDetailResponse(
     val id: Long,
+    val sellerId: Long,
     val name: String,
     val description: String,
     val price: BigDecimal,
@@ -94,6 +97,7 @@ data class ProductDetailResponse(
     companion object {
         fun from(product: Product): ProductDetailResponse = ProductDetailResponse(
             id = product.id!!,
+            sellerId = product.sellerId,
             name = product.name,
             description = product.description,
             price = product.price,

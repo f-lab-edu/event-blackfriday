@@ -20,6 +20,7 @@ logging:
     com.jaeyeon.blackfriday: DEBUG
     org.springframework.web: INFO
     org.springframework.session: INFO
+    org.redisson.connection.DNSMonitor: ERROR
 
 spring:
   session:
@@ -28,6 +29,7 @@ spring:
       namespace: "blackfriday:session"
       flush-mode: on_save
       cleanup-cron: "0 */60 * * * *"
+      repository-type: indexed
 
   data:
     redis:
@@ -59,6 +61,18 @@ server:
     session:
       timeout: 3600s
 
+ratelimit:
+  order:
+    requests-per-second: 10
+    window-size-in-seconds: 1
+
+queue:
+  order:
+    max-queue-size: 1000
+    default-processing-rate: 1.0
+    check-interval: 10000
+    max-wait-time-minutes: 30
+
 ---
 spring:
   config:
@@ -68,17 +82,43 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: ${REDIS_PASSWORD}
+      password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:blackfriday
     username: ${H2_USERNAME}
-    password: ${H2_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+ratelimit:
+  order:
+    requests-per-second: 10
+    window-size-in-seconds: 1
+
+queue:
+  order:
+    max-queue-size: 1000
+    default-processing-rate: 1.0
+    check-interval: 10000
+    max-wait-time-minutes: 30
 
 ---
 spring:
@@ -111,3 +151,19 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+
+ratelimit:
+  order:
+    requests-per-second: 10
+    window-size-in-seconds: 1
+
+queue:
+  order:
+    max-queue-size: 1000
+    default-processing-rate: 1.0
+    check-interval: 10000
+    max-wait-time-minutes: 30
+
+logging:
+  level:
+    org.hibernate.SQL_SLOW: INFO
