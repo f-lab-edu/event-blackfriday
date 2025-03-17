@@ -5,6 +5,7 @@ import com.jaeyeon.blackfriday.common.security.annotation.SellerOnly
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CategoryTreeResponse
 import com.jaeyeon.blackfriday.domain.category.dto.CreateCategoryRequest
+import com.jaeyeon.blackfriday.domain.category.dto.UpdateCategoryParentRequest
 import com.jaeyeon.blackfriday.domain.category.dto.UpdateCategoryRequest
 import com.jaeyeon.blackfriday.domain.category.service.CategoryService
 import io.swagger.v3.oas.annotations.Operation
@@ -64,6 +65,24 @@ class CategoryController(
         @Valid @RequestBody request: UpdateCategoryRequest,
     ): CategoryResponse {
         return categoryService.updateCategory(sellerId, id, request)
+    }
+
+    @Operation(summary = "카테고리 부모 변경", description = "카테고리의 부모를 변경하여 계층 구조를 재구성합니다.")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "변경 성공"),
+            ApiResponse(responseCode = "400", description = "잘못된 요청 또는 순환 참조 발생"),
+            ApiResponse(responseCode = "404", description = "카테고리를 찾을 수 없음"),
+        ],
+    )
+    @PutMapping("/{id}/parent")
+    @SellerOnly
+    fun updateCategoryParent(
+        @CurrentUser sellerId: Long,
+        @Parameter(description = "카테고리 ID") @PathVariable id: Long,
+        @Valid @RequestBody request: UpdateCategoryParentRequest,
+    ): CategoryResponse {
+        return categoryService.updateCategoryParent(sellerId, id, request.parentId)
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
