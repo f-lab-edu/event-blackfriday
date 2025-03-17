@@ -7,4 +7,6 @@ interface CategoryRepository : JpaRepository<Category, Long> {
     fun findByDepthOrderByDisplayOrderAsc(depth: Int): List<Category>
     fun findByOrderByDisplayOrderAsc(): List<Category>
     fun existsByNameAndDepth(name: String, depth: Int): Boolean
+    fun findByParentId(parentId: Long): List<Category>
+    fun findByParentIdIsNull(): List<Category>
 }

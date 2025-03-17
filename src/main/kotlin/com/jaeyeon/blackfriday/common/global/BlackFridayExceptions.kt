@@ -109,3 +109,16 @@ class OrderQueueException(
         fun failedToAddToQueue() = OrderQueueException(ErrorCode.QUEUE_ADD_FAILED)
     }
 }
+
+class BrandException(
+    errorCode: ErrorCode,
+    message: String? = errorCode.message,
+) : BlackFridayException(errorCode, message) {
+
+    companion object {
+        fun alreadyExists() = BrandException(ErrorCode.BRAND_ALREADY_EXISTS)
+        fun brandNotFound() = BrandException(ErrorCode.BRAND_NOT_FOUND)
+        fun mappingExists() = BrandException(ErrorCode.BRAND_MAPPING_EXISTS)
+        fun idNotGenerated() = BrandException(ErrorCode.BRAND_ID_NOT_GENERATED)
+    }
+}

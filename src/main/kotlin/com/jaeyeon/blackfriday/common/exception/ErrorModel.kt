@@ -26,7 +26,7 @@ enum class ErrorCode(
 
     // Category Errors
     INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, "CATEGORY-001", "카테고리 이름은 2-50자 사이여야 합니다."),
-    INVALID_CATEGORY_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-002", "카테고리는 최대 4단계까지만 허용됩니다."),
+    INVALID_CATEGORY_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-002", "카테고리 깊이가 부모 카테고리와 일치하지 않습니다."),
     INVALID_CATEGORY_DISPLAY_ORDER(HttpStatus.BAD_REQUEST, "CATEGORY-003", "노출 순서는 0 이상이어야 합니다"),
     INVALID_CATEGORY_CLOSURE_DEPTH(HttpStatus.BAD_REQUEST, "CATEGORY-004", "Closure depth는 0 이상이어야 합니다"),
     INVALID_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CATEGORY-005", "카테고리를 찾을 수 없습니다."),
@@ -69,6 +69,12 @@ enum class ErrorCode(
     QUEUE_ALREADY_IN(HttpStatus.BAD_REQUEST, "QUEUE-002", "이미 대기열에 있는 사용자입니다."),
     QUEUE_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "QUEUE-003", "대기열 추가에 실패했습니다."),
     QUEUE_ENTERED(HttpStatus.ACCEPTED, "QUEUE-004", "현재 주문이 많아 대기열에 등록되었습니다. 잠시만 기다려주세요."),
+
+    // Brand Errors
+    BRAND_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "BRAND-001", "이미 존재하는 브랜드입니다."),
+    BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND-002", "브랜드를 찾을 수 없습니다."),
+    BRAND_MAPPING_EXISTS(HttpStatus.CONFLICT, "BRAND-003", "브랜드와 카테고리 매핑이 존재합니다."),
+    BRAND_ID_NOT_GENERATED(HttpStatus.BAD_REQUEST, "BRAND-004", "브랜드 ID 생성에 실패했습니다."),
 }
 
 data class ErrorResponse(

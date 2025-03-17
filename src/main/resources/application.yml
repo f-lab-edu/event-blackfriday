@@ -140,7 +140,7 @@ spring:
         shutdown-timeout: 200ms
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+    url: jdbc:mysql://${MYSQL_HOST}:3306/${MYSQL_DATABASE}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
   jpa:

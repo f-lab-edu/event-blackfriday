@@ -57,8 +57,10 @@ class OrderController(
         val queuePosition = orderQueueService.addToQueue(memberId.toString())
 
         return if (orderQueueService.isReadyToProcess(queuePosition)) {
+            // createOrder
             processOrder(memberId, request)
         } else {
+            // ... [메소드명 개선]
             createQueueResponse(queuePosition)
         }
     }

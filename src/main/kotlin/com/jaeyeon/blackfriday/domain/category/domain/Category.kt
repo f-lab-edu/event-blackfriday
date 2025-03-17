@@ -34,6 +34,9 @@ class Category(
     @Column(name = "seller_id", nullable = false)
     val sellerId: Long,
 
+    @Column(name = "parent_id")
+    var parentId: Long? = null,
+
     @Column(nullable = false)
     var displayOrder: Int = 1,
 
