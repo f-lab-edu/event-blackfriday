@@ -19,4 +19,18 @@ interface CategoryClosureRepository : JpaRepository<CategoryClosure, Long> {
     @Modifying
     @Query("DELETE FROM CategoryClosure cc WHERE cc.ancestor.id = :categoryId OR cc.descendant.id = :categoryId")
     fun deleteAllByCategoryId(categoryId: Long)
+
+    @Modifying
+    @Query("DELETE FROM CategoryClosure cc WHERE cc.descendant.id = :descendantId AND cc.depth > :depth")
+    fun deleteByDescendantIdAndDepthGreaterThan(descendantId: Long, depth: Int)
+
+    @Query(
+        """
+        SELECT cc FROM CategoryClosure cc 
+        JOIN FETCH cc.descendant 
+        WHERE cc.ancestor.id = :ancestorId 
+        AND cc.depth > :depth
+    """,
+    )
+    fun findByAncestorIdAndDepthGreaterThan(ancestorId: Long, depth: Int): List<CategoryClosure>
 }

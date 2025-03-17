@@ -40,6 +40,11 @@ data class UpdateCategoryRequest(
     val displayOrder: Int? = null,
 )
 
+data class UpdateCategoryParentRequest(
+    @Schema(description = "새 상위 카테고리 ID. null인 경우 루트 카테고리로 변경", example = "1", nullable = true)
+    val parentId: Long?,
+)
+
 data class CategoryResponse(
     val id: Long,
     val name: String,
