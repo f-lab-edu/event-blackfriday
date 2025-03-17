@@ -43,8 +43,6 @@ services:
     networks:
       - app-network
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
   app2:
@@ -71,8 +69,6 @@ services:
     networks:
       - app-network
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
   mysql:
