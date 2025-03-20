@@ -4,8 +4,10 @@ services:
     container_name: blackfriday-nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
     networks:
       - app-network
     depends_on:
