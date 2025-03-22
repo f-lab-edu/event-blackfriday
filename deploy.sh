@@ -11,11 +11,6 @@ error_exit() {
     exit 1
 }
 
-reload_nginx() {
-    log "Nginx 설정을 리로드하는 중..."
-    docker compose exec -T nginx nginx -s reload || log "Warning: Nginx 리로드 실패"
-}
-
 log "롤링 업데이트 배포 스크립트 시작"
 
 cd "$(dirname "$0")/docker" || error_exit "docker 디렉토리로 이동 실패"
@@ -76,10 +71,6 @@ else
     log "경고: APP1이 정상적으로 실행되지 않았습니다. 롤링 업데이트를 중단합니다."
     error_exit "롤링 업데이트 실패: 첫 번째 인스턴스가 정상적으로 시작되지 않음"
 fi
-
-log "로드 밸런서 설정 업데이트 중..."
-docker compose up -d nginx || error_exit "Nginx 업데이트 실패"
-reload_nginx
 
 log "불필요한 리소스 정리 중..."
 docker compose up -d --remove-orphans || log "고아 컨테이너 정리 실패 (무시)"

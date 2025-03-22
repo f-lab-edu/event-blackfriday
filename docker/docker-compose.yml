@@ -1,26 +1,4 @@
 services:
-  nginx:
-    image: nginx:latest
-    container_name: blackfriday-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/nginx/ssl
-    networks:
-      - app-network
-    depends_on:
-      app1:
-        condition: service_healthy
-      app2:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
   app1:
     image: ${DOCKER_IMAGE}
     container_name: blackfriday-app1
