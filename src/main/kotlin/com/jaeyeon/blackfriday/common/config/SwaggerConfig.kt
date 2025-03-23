@@ -21,6 +21,13 @@ class SwaggerConfig {
             .build()
 
         return OpenAPI()
+            .servers(
+                listOf(
+                    io.swagger.v3.oas.models.servers.Server()
+                        .url("https://event-blackfriday.com")
+                        .description("Production Server"),
+                ),
+            )
             .info(
                 Info()
                     .title("BlackFriday API")
