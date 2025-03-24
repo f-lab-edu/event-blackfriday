@@ -7,6 +7,7 @@ import com.jaeyeon.blackfriday.common.interceptor.SellerInterceptor
 import com.jaeyeon.blackfriday.common.resolver.CurrentUserArgumentResolver
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
+import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
@@ -63,5 +64,13 @@ class WebConfig(
                 "classpath:/public/",
                 "classpath:/resources/",
             )
+    }
+
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry.addMapping("/**")
+            .allowedOrigins("https://event-blackfriday.com")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .maxAge(3600)
     }
 }
