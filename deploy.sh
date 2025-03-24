@@ -35,17 +35,12 @@ done
 
 log "필수 환경 변수 확인 완료"
 
-CURRENT_PORT1=$(docker port blackfriday-app1 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8080")
-CURRENT_PORT2=$(docker port blackfriday-app2 8080/tcp 2>/dev/null | cut -d ':' -f2 || echo "8081")
-log "현재 포트 - APP1: $CURRENT_PORT1, APP2: $CURRENT_PORT2"
+export APP1_PORT=8080
+export APP2_PORT=8081
 
-if [ "$CURRENT_PORT1" = "8082" ]; then
-    NEW_PORT1="8080"
-else
-    NEW_PORT1="8082"
-fi
-log "롤링 업데이트 1/2: APP1을 포트 $NEW_PORT1로 업데이트 중..."
-export APP1_PORT=$NEW_PORT1
+log "롤링 업데이트 1/2: APP1 업데이트 중..."
+docker compose stop app1
+docker compose rm -f app1
 
 docker compose up -d --no-deps app1 || error_exit "APP1 업데이트 실패"
 
@@ -55,13 +50,8 @@ sleep 30
 if docker ps | grep -q "blackfriday-app1"; then
     log "롤링 업데이트 2/2: APP1이 정상 작동 확인됨, APP2 업데이트 진행..."
 
-    if [ "$CURRENT_PORT2" = "8083" ]; then
-        NEW_PORT2="8081"
-    else
-        NEW_PORT2="8083"
-    fi
-    log "APP2를 포트 $NEW_PORT2로 업데이트 중..."
-    export APP2_PORT=$NEW_PORT2
+    docker compose stop app2
+    docker compose rm -f app2
 
     docker compose up -d --no-deps app2 || error_exit "APP2 업데이트 실패"
 
