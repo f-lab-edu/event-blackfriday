@@ -1,8 +1,5 @@
-CREATE DATABASE IF NOT EXISTS blackfriday;
-USE blackfriday;
-
 -- Members 테이블
-CREATE TABLE members (
+CREATE TABLE IF NOT EXISTS members (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
@@ -16,7 +13,7 @@ CREATE TABLE members (
 );
 
 -- Brand 테이블
-CREATE TABLE brands (
+CREATE TABLE IF NOT EXISTS brands (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(200),
@@ -26,7 +23,7 @@ CREATE TABLE brands (
 );
 
 -- Categories 테이블
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     depth INT NOT NULL DEFAULT 1,
@@ -41,7 +38,7 @@ CREATE TABLE categories (
 );
 
 -- Category Closure 테이블 (계층 구조 관리)
-CREATE TABLE category_closure (
+CREATE TABLE IF NOT EXISTS category_closure (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     ancestor_id BIGINT NOT NULL,
     descendant_id BIGINT NOT NULL,
@@ -52,7 +49,7 @@ CREATE TABLE category_closure (
 );
 
 -- Category-Brand Mapping 테이블
-CREATE TABLE category_brand_mappings (
+CREATE TABLE IF NOT EXISTS category_brand_mappings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     category_id BIGINT NOT NULL,
     brand_id BIGINT NOT NULL,
@@ -64,7 +61,7 @@ CREATE TABLE category_brand_mappings (
 );
 
 -- Products 테이블
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     description VARCHAR(2000) NOT NULL,
@@ -84,7 +81,7 @@ CREATE TABLE products (
 );
 
 -- Orders 테이블
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_number VARCHAR(255) NOT NULL UNIQUE,
     member_id BIGINT NOT NULL,
@@ -100,7 +97,7 @@ CREATE TABLE orders (
 );
 
 -- Order Items 테이블
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
@@ -115,7 +112,7 @@ CREATE TABLE order_items (
 );
 
 -- Payments 테이블
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     payment_number VARCHAR(255) NOT NULL UNIQUE,
     order_number VARCHAR(255) NOT NULL,
@@ -130,23 +127,23 @@ CREATE TABLE payments (
 );
 
 -- 인덱스 추가
-CREATE INDEX idx_brands_is_deleted ON brands(is_deleted);
-CREATE INDEX idx_products_brand ON products(brand_id);
-CREATE INDEX idx_products_seller ON products(seller_id);
-CREATE INDEX idx_categories_seller ON categories(seller_id);
-CREATE INDEX idx_orders_member ON orders(member_id);
-CREATE INDEX idx_payments_member ON payments(member_id);
-CREATE INDEX idx_orders_order_number ON orders(order_number);
-CREATE INDEX idx_payments_order_number ON payments(order_number);
-CREATE INDEX idx_payments_payment_number ON payments(payment_number);
-CREATE INDEX idx_members_is_deleted ON members(is_deleted);
-CREATE INDEX idx_members_email ON members(email);
-CREATE INDEX idx_category_is_deleted ON categories(is_deleted);
-CREATE INDEX idx_products_is_deleted ON products(is_deleted);
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_category_closure_ancestor ON category_closure(ancestor_id);
-CREATE INDEX idx_category_closure_descendant ON category_closure(descendant_id);
-CREATE INDEX idx_order_items_order ON order_items(order_id);
-CREATE INDEX idx_order_items_product ON order_items(product_id);
-CREATE INDEX idx_order_items_is_deleted ON order_items(is_deleted);
-CREATE INDEX idx_category_brand_mapping ON category_brand_mappings(category_id, brand_id);
+CREATE INDEX IF NOT EXISTS idx_brands_is_deleted ON brands(is_deleted);
+CREATE INDEX IF NOT EXISTS idx_products_brand ON products(brand_id);
+CREATE INDEX IF NOT EXISTS idx_products_seller ON products(seller_id);
+CREATE INDEX IF NOT EXISTS idx_categories_seller ON categories(seller_id);
+CREATE INDEX IF NOT EXISTS idx_orders_member ON orders(member_id);
+CREATE INDEX IF NOT EXISTS idx_payments_member ON payments(member_id);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+CREATE INDEX IF NOT EXISTS idx_payments_order_number ON payments(order_number);
+CREATE INDEX IF NOT EXISTS idx_payments_payment_number ON payments(payment_number);
+CREATE INDEX IF NOT EXISTS idx_members_is_deleted ON members(is_deleted);
+CREATE INDEX IF NOT EXISTS idx_members_email ON members(email);
+CREATE INDEX IF NOT EXISTS idx_category_is_deleted ON categories(is_deleted);
+CREATE INDEX IF NOT EXISTS idx_products_is_deleted ON products(is_deleted);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_category_closure_ancestor ON category_closure(ancestor_id);
+CREATE INDEX IF NOT EXISTS idx_category_closure_descendant ON category_closure(descendant_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_is_deleted ON order_items(is_deleted);
+CREATE INDEX IF NOT EXISTS idx_category_brand_mapping ON category_brand_mappings(category_id, brand_id);
