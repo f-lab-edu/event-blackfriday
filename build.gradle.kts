@@ -81,6 +81,8 @@ dependencies {
     // Database
     runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("com.h2database:h2")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test") {

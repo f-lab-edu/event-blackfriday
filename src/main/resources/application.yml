@@ -23,6 +23,11 @@ logging:
     org.redisson.connection.DNSMonitor: ERROR
 
 spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    out-of-order: false
   session:
     store-type: redis
     redis:
@@ -78,6 +83,9 @@ spring:
   config:
     activate:
       on-profile: local
+  flyway:
+    clean-disabled: false
+    locations: classpath:db/migration,classpath:db/h2
   data:
     redis:
       host: localhost
@@ -95,7 +103,7 @@ spring:
     username: ${H2_USERNAME}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
     open-in-view: false
     properties:
@@ -125,6 +133,9 @@ spring:
   config:
     activate:
       on-profile: prod
+  flyway:
+    clean-disabled: true
+    locations: classpath:db/migration,classpath:db/mysql
   data:
     redis:
       host: redis
