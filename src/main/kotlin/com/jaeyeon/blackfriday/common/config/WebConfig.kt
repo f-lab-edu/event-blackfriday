@@ -32,6 +32,7 @@ class WebConfig(
             "/api/v1/members/signup",
             "/api/v1/members/login",
             "/products/**",
+            "/api/v1/products/**",
         ) + SWAGGER_PATHS
     }
 
