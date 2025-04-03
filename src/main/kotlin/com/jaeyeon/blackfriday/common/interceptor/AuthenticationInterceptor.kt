@@ -14,8 +14,9 @@ class AuthenticationInterceptor : HandlerInterceptor {
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler !is HandlerMethod) return true
 
-        val sessionId = request.getHeader(AUTH_HEADER)
-            ?: throw MemberException.unauthorized()
+        if (request.getHeader(AUTH_HEADER) == null) {
+            throw MemberException.unauthorized()
+        }
 
         val session = request.getSession(false)
             ?: throw MemberException.unauthorized()
