@@ -30,7 +30,10 @@ class OrderRateLimitInterceptor(
         response: HttpServletResponse,
         handler: Any,
     ): Boolean {
-        val sessionUser = request.session.getAttribute(USER_KEY) as? SessionUser
+        val session = request.getSession(false)
+            ?: throw MemberException.unauthorized()
+
+        val sessionUser = session.getAttribute(USER_KEY) as? SessionUser
             ?: throw MemberException.unauthorized()
 
         val userId = sessionUser.id.toString()
