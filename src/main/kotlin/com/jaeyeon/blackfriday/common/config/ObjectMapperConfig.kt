@@ -30,7 +30,14 @@ class ObjectMapperConfig {
 
     @Bean
     fun redisObjectMapper(): ObjectMapper {
-        return objectMapper().copy().apply {
+        return ObjectMapper().apply {
+            registerModule(KotlinModule.Builder().build())
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+
             val typeValidator = BasicPolymorphicTypeValidator
                 .builder()
                 .allowIfBaseType(SessionUser::class.java)
@@ -39,7 +46,7 @@ class ObjectMapperConfig {
 
             activateDefaultTyping(
                 typeValidator,
-                ObjectMapper.DefaultTyping.NON_FINAL_AND_ENUMS,
+                ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY,
             )
         }

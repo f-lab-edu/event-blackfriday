@@ -1,5 +1,6 @@
 package com.jaeyeon.blackfriday.common.security.session
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -33,6 +34,17 @@ data class SessionUser(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 ) {
+
+    @JsonCreator
+    constructor() : this(
+        id = 0L,
+        email = "",
+        name = "",
+        membershipType = MembershipType.NORMAL,
+        roles = emptySet(),
+        createdAt = LocalDateTime.now(),
+    )
+
     companion object {
         fun from(member: Member) = SessionUser(
             id = member.id!!,
