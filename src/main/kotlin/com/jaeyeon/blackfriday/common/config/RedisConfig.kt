@@ -13,6 +13,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
 import java.time.Duration.ZERO
@@ -68,6 +69,17 @@ class RedisConfig(
 
             hashKeySerializer = StringRedisSerializer()
             hashValueSerializer = StringRedisSerializer()
+        }
+    }
+
+    @Bean
+    fun sessionRedisTemplate(springSessionDefaultRedisSerializer: RedisSerializer<Any>): RedisTemplate<String, Any> {
+        return RedisTemplate<String, Any>().apply {
+            connectionFactory = redisConnectionFactory()
+            keySerializer = StringRedisSerializer()
+            valueSerializer = springSessionDefaultRedisSerializer
+            hashKeySerializer = StringRedisSerializer()
+            hashValueSerializer = springSessionDefaultRedisSerializer
         }
     }
 }

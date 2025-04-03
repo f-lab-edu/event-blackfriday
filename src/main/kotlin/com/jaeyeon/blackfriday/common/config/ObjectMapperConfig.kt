@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.jaeyeon.blackfriday.common.security.session.SessionUser
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -40,8 +39,7 @@ class ObjectMapperConfig {
 
             val typeValidator = BasicPolymorphicTypeValidator
                 .builder()
-                .allowIfBaseType(SessionUser::class.java)
-                .allowIfSubType(Any::class.java)
+                .allowIfBaseType(Any::class.java)
                 .build()
 
             activateDefaultTyping(

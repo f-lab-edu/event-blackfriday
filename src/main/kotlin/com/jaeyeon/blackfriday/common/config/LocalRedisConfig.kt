@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
@@ -42,6 +43,17 @@ class LocalRedisConfig {
 
             hashKeySerializer = StringRedisSerializer()
             hashValueSerializer = StringRedisSerializer()
+        }
+    }
+
+    @Bean
+    fun sessionRedisTemplate(springSessionDefaultRedisSerializer: RedisSerializer<Any>): RedisTemplate<String, Any> {
+        return RedisTemplate<String, Any>().apply {
+            connectionFactory = redisConnectionFactory()
+            keySerializer = StringRedisSerializer()
+            valueSerializer = springSessionDefaultRedisSerializer
+            hashKeySerializer = StringRedisSerializer()
+            hashValueSerializer = springSessionDefaultRedisSerializer
         }
     }
 }
