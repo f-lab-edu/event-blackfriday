@@ -20,10 +20,6 @@ class AuthenticationInterceptor : HandlerInterceptor {
         val session = request.getSession(false)
             ?: throw MemberException.unauthorized()
 
-        if (session.id != sessionId) {
-            throw MemberException.unauthorized()
-        }
-
         if (session.getAttribute(USER_KEY) == null) {
             throw MemberException.unauthorized()
         }
