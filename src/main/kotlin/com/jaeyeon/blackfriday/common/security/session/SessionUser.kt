@@ -16,6 +16,7 @@ object SecurityConstants {
 
 object SessionConstants {
     const val USER_KEY = "USER"
+    const val SESSION_USER_ATTRIBUTE = "SESSION_USER"
 }
 
 object Roles {

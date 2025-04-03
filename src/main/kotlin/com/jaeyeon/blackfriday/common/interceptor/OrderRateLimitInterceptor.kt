@@ -44,13 +44,24 @@ class OrderRateLimitInterceptor(
         }
         log.info("[OrderRateLimitInterceptor] USER attribute found: {}", userAttribute::class.java.simpleName)
 
-        val sessionUser = userAttribute as? SessionUser
-        if (sessionUser == null) {
-            log.error(
-                "[OrderRateLimitInterceptor] Failed to cast USER attribute to SessionUser! Attribute type: {}",
-                userAttribute::class.java.name,
-            )
-            throw MemberException.unauthorized()
+        val sessionUser = when (userAttribute) {
+            is SessionUser -> userAttribute
+            is Map<*, *> -> {
+                try {
+                    log.info("[OrderRateLimitInterceptor] Converting Map to SessionUser")
+                    objectMapper.convertValue(userAttribute, SessionUser::class.java)
+                } catch (e: Exception) {
+                    log.error("[OrderRateLimitInterceptor] Failed to convert Map to SessionUser", e)
+                    throw MemberException.unauthorized()
+                }
+            }
+            else -> {
+                log.error(
+                    "[OrderRateLimitInterceptor] Unexpected session attribute type: {}",
+                    userAttribute::class.java.name,
+                )
+                throw MemberException.unauthorized()
+            }
         }
 
         val userId = sessionUser.id.toString()
