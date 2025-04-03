@@ -31,10 +31,27 @@ class OrderRateLimitInterceptor(
         handler: Any,
     ): Boolean {
         val session = request.getSession(false)
-            ?: throw MemberException.unauthorized()
+        if (session == null) {
+            log.warn("[OrderRateLimitInterceptor] Session not found!")
+            throw MemberException.unauthorized()
+        }
+        log.info("[OrderRateLimitInterceptor] Session found: ID={}", session.id)
 
-        val sessionUser = session.getAttribute(USER_KEY) as? SessionUser
-            ?: throw MemberException.unauthorized()
+        val userAttribute = session.getAttribute(USER_KEY)
+        if (userAttribute == null) {
+            log.warn("[OrderRateLimitInterceptor] USER attribute is null in session: {}", session.id)
+            throw MemberException.unauthorized()
+        }
+        log.info("[OrderRateLimitInterceptor] USER attribute found: {}", userAttribute::class.java.simpleName)
+
+        val sessionUser = userAttribute as? SessionUser
+        if (sessionUser == null) {
+            log.error(
+                "[OrderRateLimitInterceptor] Failed to cast USER attribute to SessionUser! Attribute type: {}",
+                userAttribute::class.java.name,
+            )
+            throw MemberException.unauthorized()
+        }
 
         val userId = sessionUser.id.toString()
 
