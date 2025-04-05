@@ -34,7 +34,7 @@ class OrderService(
     fun createOrder(memberId: Long, request: CreateOrderRequest): OrderResponse {
         log.info { "Creating order for member: $memberId with items: ${request.items.size}" }
         validateProductPrice(request.items)
-        validateAndDecreaseStocks(memberId, request.items)
+        validateAndDecreaseStocks(request.items)
 
         val order = Order(
             orderNumber = orderNumberGenerator.generate(),
@@ -93,7 +93,7 @@ class OrderService(
             .also { it.cancel() }
 
         val orderItems = findAndSoftDeleteOrderItems(order.id!!)
-        restoreStocks(memberId, orderItems)
+        restoreStocks(orderItems)
 
         log.info { "Order cancelled: $orderNumber" }
         return OrderResponse.of(order, orderItems)
@@ -148,10 +148,9 @@ class OrderService(
         }
     }
 
-    private fun validateAndDecreaseStocks(memberId: Long, items: List<CreateOrderItemRequest>) {
+    private fun validateAndDecreaseStocks(items: List<CreateOrderItemRequest>) {
         items.forEach { item ->
-            productService.decreaseStockQuantity(
-                memberId,
+            productService.decreaseStockQuantityForPurchase(
                 item.productId,
                 StockRequest(item.quantity),
             )
@@ -168,10 +167,9 @@ class OrderService(
         return items.sumOf { it.price.multiply(BigDecimal(it.quantity)) }
     }
 
-    private fun restoreStocks(memberId: Long, orderItems: List<OrderItem>) {
+    private fun restoreStocks(orderItems: List<OrderItem>) {
         orderItems.forEach { item ->
-            productService.increaseStockQuantity(
-                memberId,
+            productService.increaseStockQuantityForPurchase(
                 item.productId,
                 StockRequest(item.quantity),
             )

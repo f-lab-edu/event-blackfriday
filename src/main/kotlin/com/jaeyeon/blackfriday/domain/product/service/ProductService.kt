@@ -80,6 +80,18 @@ class ProductService(
         return ProductStockResponse.from(product)
     }
 
+    fun increaseStockQuantityForPurchase(productId: Long, request: StockRequest): ProductStockResponse {
+        val product = findProductById(productId)
+        product.increaseStockQuantity(request.amount)
+        return ProductStockResponse.from(product)
+    }
+
+    fun decreaseStockQuantityForPurchase(productId: Long, request: StockRequest): ProductStockResponse {
+        val product = findProductById(productId)
+        product.decreaseStockQuantity(request.amount)
+        return ProductStockResponse.from(product)
+    }
+
     @Transactional(readOnly = true)
     fun getProduct(id: Long): ProductDetailResponse {
         return ProductDetailResponse.from(findProductById(id))

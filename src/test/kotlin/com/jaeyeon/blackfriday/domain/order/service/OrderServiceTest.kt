@@ -66,8 +66,7 @@ class OrderServiceTest : BehaviorSpec({
             } returns ProductDetailResponse.from(product)
 
             every {
-                productService.decreaseStockQuantity(
-                    order.memberId,
+                productService.decreaseStockQuantityForPurchase(
                     orderItem.productId,
                     StockRequest(orderItem.quantity),
                 )

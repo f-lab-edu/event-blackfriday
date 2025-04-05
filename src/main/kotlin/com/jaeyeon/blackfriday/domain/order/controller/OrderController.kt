@@ -57,11 +57,9 @@ class OrderController(
         val queuePosition = orderQueueService.addToQueue(memberId.toString())
 
         return if (orderQueueService.isReadyToProcess(queuePosition)) {
-            // createOrder
             processOrder(memberId, request)
         } else {
-            // ... [메소드명 개선]
-            createQueueResponse(queuePosition)
+            respondWithQueueStatus(queuePosition)
         }
     }
 
@@ -70,7 +68,7 @@ class OrderController(
         return ResponseEntity.status(HttpStatus.CREATED).body(order)
     }
 
-    private fun createQueueResponse(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
+    private fun respondWithQueueStatus(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
             .body(
                 OrderQueueResponse(
