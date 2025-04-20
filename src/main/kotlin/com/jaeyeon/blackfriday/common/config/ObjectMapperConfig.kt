@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -15,6 +16,8 @@ import org.springframework.data.redis.serializer.RedisSerializer
 
 @Configuration
 class ObjectMapperConfig {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Bean
     @Primary
@@ -32,14 +35,10 @@ class ObjectMapperConfig {
         return ObjectMapper().apply {
             registerModule(KotlinModule.Builder().build())
             registerModule(JavaTimeModule())
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
-            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
 
             val typeValidator = BasicPolymorphicTypeValidator
                 .builder()
-                .allowIfBaseType(Any::class.java)
+                .allowIfSubType(Any::class.java)
                 .build()
 
             activateDefaultTyping(

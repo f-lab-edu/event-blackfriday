@@ -110,10 +110,10 @@ Content-Type: application/json
 }
 
 ### 인증 토큰 없이 프로필 조회
-GET http://localhost:8080/api/v1/members/profile
+GET http://localhost:8080/api/v1/members/profiles/me
 
 ### 잘못된 인증 토큰으로 프로필 조회
-GET http://localhost:8080/api/v1/members/profile
+GET http://localhost:8080/api/v1/members/profiles/me
 X-Auth-Token: invalid-token
 
 

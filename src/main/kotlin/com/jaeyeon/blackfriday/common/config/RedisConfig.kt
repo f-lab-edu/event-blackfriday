@@ -35,7 +35,7 @@ class RedisConfig(
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        LettuceClientConfiguration.builder()
+        val clientConfiguration = LettuceClientConfiguration.builder()
             .clientName("blackfriday-session")
             .commandTimeout(ofSeconds(2))
             .shutdownTimeout(ZERO)
@@ -55,7 +55,7 @@ class RedisConfig(
         }
 
         log.info("Redis 연결 팩토리 생성 완료")
-        return LettuceConnectionFactory(config)
+        return LettuceConnectionFactory(config, clientConfiguration)
     }
 
     @Bean
@@ -63,23 +63,33 @@ class RedisConfig(
     fun rateLimitRedisTemplate(): RedisTemplate<String, String> {
         return RedisTemplate<String, String>().apply {
             connectionFactory = redisConnectionFactory()
-
             keySerializer = StringRedisSerializer()
             valueSerializer = StringRedisSerializer()
-
             hashKeySerializer = StringRedisSerializer()
             hashValueSerializer = StringRedisSerializer()
+            afterPropertiesSet()
         }
     }
 
     @Bean
     fun sessionRedisTemplate(springSessionDefaultRedisSerializer: RedisSerializer<Any>): RedisTemplate<String, Any> {
+        log.info(
+            "[RedisConfig] Creating sessionRedisTemplate with serializer: {}",
+            springSessionDefaultRedisSerializer.javaClass.name,
+        )
+
         return RedisTemplate<String, Any>().apply {
             connectionFactory = redisConnectionFactory()
+
             keySerializer = StringRedisSerializer()
-            valueSerializer = springSessionDefaultRedisSerializer
             hashKeySerializer = StringRedisSerializer()
+
+            valueSerializer = springSessionDefaultRedisSerializer
             hashValueSerializer = springSessionDefaultRedisSerializer
+
+            afterPropertiesSet()
+
+            log.info("[RedisConfig] sessionRedisTemplate configured successfully")
         }
     }
 }

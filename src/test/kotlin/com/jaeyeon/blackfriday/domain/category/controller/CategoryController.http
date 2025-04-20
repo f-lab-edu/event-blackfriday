@@ -1,7 +1,7 @@
 ### 카테고리 생성 - 루트 카테고리
 POST http://localhost:8080/api/v1/categories
 Content-Type: application/json
-X-Auth-Token: {{auth_token}}
+X-Auth-Token: 1bc80f1b-bd3a-41e6-8324-6d36879e6398
 
 {
   "name": "전자제품",
