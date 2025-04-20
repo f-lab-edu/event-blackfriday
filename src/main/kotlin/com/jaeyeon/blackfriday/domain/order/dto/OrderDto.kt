@@ -113,6 +113,8 @@ data class OrderSummaryResponse(
     }
 }
 
+// 주문 대기열에 못들어가고 있을 때, 앞에 몇번 대기하고 있는지
+// TODO: 남은시간 반환 작업
 data class QueuePosition(
     val position: Long,
     val totalWaiting: Long,
