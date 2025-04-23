@@ -2,7 +2,7 @@ package com.jaeyeon.blackfriday.common.resolver
 
 import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.annotation.CurrentUser
-import com.jaeyeon.blackfriday.common.security.session.SessionConstants.SESSION_USER_ATTRIBUTE
+import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
 import com.jaeyeon.blackfriday.common.security.session.SessionUser
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
@@ -28,7 +28,10 @@ class CurrentUserArgumentResolver : HandlerMethodArgumentResolver {
         val request = webRequest.getNativeRequest(HttpServletRequest::class.java)
             ?: throw MemberException.unauthorized()
 
-        val sessionUser = request.getAttribute(SESSION_USER_ATTRIBUTE) as? SessionUser
+        val session = request.getSession(false)
+            ?: throw MemberException.unauthorized()
+
+        val sessionUser = session.getAttribute(USER_KEY) as? SessionUser
             ?: throw MemberException.unauthorized()
 
         return sessionUser.id

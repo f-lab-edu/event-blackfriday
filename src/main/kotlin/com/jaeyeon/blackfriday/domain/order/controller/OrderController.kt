@@ -59,7 +59,7 @@ class OrderController(
         return if (orderQueueService.isReadyToProcess(queuePosition)) {
             processOrder(memberId, request)
         } else {
-            respondWithQueueStatus(queuePosition)
+            createQueueResponse(queuePosition)
         }
     }
 
@@ -68,7 +68,7 @@ class OrderController(
         return ResponseEntity.status(HttpStatus.CREATED).body(order)
     }
 
-    private fun respondWithQueueStatus(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
+    private fun createQueueResponse(queuePosition: QueuePosition): ResponseEntity<OrderQueueResponse> {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
             .body(
                 OrderQueueResponse(

@@ -13,7 +13,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
 import java.time.Duration.ZERO
@@ -35,7 +34,7 @@ class RedisConfig(
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        val clientConfiguration = LettuceClientConfiguration.builder()
+        LettuceClientConfiguration.builder()
             .clientName("blackfriday-session")
             .commandTimeout(ofSeconds(2))
             .shutdownTimeout(ZERO)
@@ -55,7 +54,7 @@ class RedisConfig(
         }
 
         log.info("Redis 연결 팩토리 생성 완료")
-        return LettuceConnectionFactory(config, clientConfiguration)
+        return LettuceConnectionFactory(config)
     }
 
     @Bean
@@ -63,33 +62,12 @@ class RedisConfig(
     fun rateLimitRedisTemplate(): RedisTemplate<String, String> {
         return RedisTemplate<String, String>().apply {
             connectionFactory = redisConnectionFactory()
+
             keySerializer = StringRedisSerializer()
             valueSerializer = StringRedisSerializer()
+
             hashKeySerializer = StringRedisSerializer()
             hashValueSerializer = StringRedisSerializer()
-            afterPropertiesSet()
-        }
-    }
-
-    @Bean
-    fun sessionRedisTemplate(springSessionDefaultRedisSerializer: RedisSerializer<Any>): RedisTemplate<String, Any> {
-        log.info(
-            "[RedisConfig] Creating sessionRedisTemplate with serializer: {}",
-            springSessionDefaultRedisSerializer.javaClass.name,
-        )
-
-        return RedisTemplate<String, Any>().apply {
-            connectionFactory = redisConnectionFactory()
-
-            keySerializer = StringRedisSerializer()
-            hashKeySerializer = StringRedisSerializer()
-
-            valueSerializer = springSessionDefaultRedisSerializer
-            hashValueSerializer = springSessionDefaultRedisSerializer
-
-            afterPropertiesSet()
-
-            log.info("[RedisConfig] sessionRedisTemplate configured successfully")
         }
     }
 }

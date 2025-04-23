@@ -111,7 +111,11 @@ jobs:
             cd /app
             
             cat > docker/.env <<EOL
+<<<<<<< HEAD
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+=======
+            DB_HOST=${{ secrets.MYSQL_HOST }}
+>>>>>>> feature/db-refactor
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
