@@ -117,6 +117,7 @@ noArg {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
+    annotation("com.jaeyeon.blackfriday.common.annotation.NoArg")
 }
 
 kotlin {

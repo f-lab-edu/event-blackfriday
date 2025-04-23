@@ -1,14 +1,13 @@
 package com.jaeyeon.blackfriday.common.security.session
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
+import com.jaeyeon.blackfriday.common.security.annotation.NoArg
 import com.jaeyeon.blackfriday.domain.member.domain.Member
 import com.jaeyeon.blackfriday.domain.member.domain.enum.MembershipType
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import java.time.LocalDateTime
 
 object SecurityConstants {
@@ -25,7 +24,7 @@ object Roles {
     const val SELLER = "ROLE_SELLER"
 }
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+@NoArg
 data class SessionUser(
     val id: Long,
     val email: String,
@@ -37,21 +36,8 @@ data class SessionUser(
     @JsonDeserialize(using = LocalDateTimeDeserializer::class)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    @JsonCreator
-    constructor() : this(
-        id = 0L,
-        email = "",
-        name = "",
-        membershipType = MembershipType.NORMAL,
-        roles = emptySet(),
-    ) {
-        log.debug("[SessionUser] Default constructor called during deserialization")
-    }
-
     companion object {
-        private val log = LoggerFactory.getLogger(SessionUser::class.java)
+        private val logger = KotlinLogging.logger {}
 
         fun from(member: Member): SessionUser {
             val sessionUser = SessionUser(
@@ -61,11 +47,7 @@ data class SessionUser(
                 membershipType = member.membershipType,
                 roles = member.membershipType.getRoleNames(),
             )
-            log.debug(
-                "[SessionUser] Created from Member: id={}, email={}",
-                sessionUser.id,
-                sessionUser.email,
-            )
+            logger.debug { "[SessionUser] Created from Member: id=${sessionUser.id}, email=${sessionUser.email}" }
             return sessionUser
         }
     }
