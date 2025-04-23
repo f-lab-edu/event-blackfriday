@@ -1,9 +1,9 @@
 package com.jaeyeon.blackfriday.common.resolver
 
+import com.jaeyeon.blackfriday.common.config.SessionUtils
 import com.jaeyeon.blackfriday.common.global.MemberException
 import com.jaeyeon.blackfriday.common.security.annotation.CurrentUser
 import com.jaeyeon.blackfriday.common.security.session.SessionConstants.USER_KEY
-import com.jaeyeon.blackfriday.common.security.session.SessionUser
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
 import org.springframework.stereotype.Component
@@ -31,8 +31,10 @@ class CurrentUserArgumentResolver : HandlerMethodArgumentResolver {
         val session = request.getSession(false)
             ?: throw MemberException.unauthorized()
 
-        val sessionUser = session.getAttribute(USER_KEY) as? SessionUser
+        val userAttribute = session.getAttribute(USER_KEY)
             ?: throw MemberException.unauthorized()
+
+        val sessionUser = SessionUtils.convertToSessionUser(userAttribute, "CurrentUserResolver")
 
         return sessionUser.id
     }
