@@ -106,8 +106,6 @@ class OrderQueueService(
     fun removeFromQueue(userId: String) {
         redisTemplate.opsForZSet().remove(QUEUE_KEY, userId)
         redisTemplate.delete(OrderConstants.Queue.Keys.queueItemExpireKey(userId))
-
-        // 사용하고 있는 곳이 없다. (삭제)
         redisTemplate.opsForValue().increment(PROCESSING_COUNT_KEY)
     }
 

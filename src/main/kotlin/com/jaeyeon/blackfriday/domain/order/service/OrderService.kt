@@ -32,32 +32,38 @@ class OrderService(
     private val log = KotlinLogging.logger {}
 
     fun createOrder(memberId: Long, request: CreateOrderRequest): OrderResponse {
-        log.info { "Creating order for member: $memberId with items: ${request.items.size}" }
-        validateProductPrice(request.items)
-        validateAndDecreaseStocks(request.items)
+        try {
+            log.info { "Creating order for member: $memberId with items: ${request.items.size}" }
+            validateProductPrice(request.items)
+            validateAndDecreaseStocks(request.items)
 
-        val order = Order(
-            orderNumber = orderNumberGenerator.generate(),
-            memberId = memberId,
-            totalAmount = calculateTotalAmount(request.items),
-            status = OrderStatus.WAITING,
-        ).also { it.readyForPayment() }
-            .let { orderRepository.save(it) }
+            val order = Order(
+                orderNumber = orderNumberGenerator.generate(),
+                memberId = memberId,
+                totalAmount = calculateTotalAmount(request.items),
+                status = OrderStatus.WAITING,
+            ).also { it.readyForPayment() }
+                .let { orderRepository.save(it) }
 
-        log.debug { "Order saved with number: ${order.orderNumber}" }
+            log.debug { "Order saved with number: ${order.orderNumber}" }
 
-        val orderItems = request.items.map { item ->
-            OrderItem(
-                orderId = order.id!!,
-                productId = item.productId,
-                quantity = item.quantity,
-                productName = item.productName,
-                price = item.price,
-            )
-        }.let { orderItemRepository.saveAll(it) }
+            val orderItems = request.items.map { item ->
+                OrderItem(
+                    orderId = order.id!!,
+                    productId = item.productId,
+                    quantity = item.quantity,
+                    productName = item.productName,
+                    price = item.price,
+                )
+            }.let { orderItemRepository.saveAll(it) }
 
-        log.info { "Order created successfully with number: ${order.orderNumber}" }
-        return OrderResponse.of(order, orderItems)
+            log.info { "Order created successfully with number: ${order.orderNumber}" }
+            return OrderResponse.of(order, orderItems)
+        } catch (e: Exception) {
+            log.error { "Order creation failed for member: $memberId, error: ${e.message}" }
+            orderQueueService.removeFromQueue(memberId.toString())
+            throw e
+        }
     }
 
     fun completePayment(memberId: Long, orderNumber: String): OrderResponse {
@@ -94,6 +100,8 @@ class OrderService(
 
         val orderItems = findAndSoftDeleteOrderItems(order.id!!)
         restoreStocks(orderItems)
+
+        orderQueueService.removeFromQueue(memberId.toString())
 
         log.info { "Order cancelled: $orderNumber" }
         return OrderResponse.of(order, orderItems)
